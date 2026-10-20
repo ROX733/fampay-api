@@ -1,11 +1,75 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template_string
 import requests, os, json, urllib.parse, time, random
 from datetime import datetime
 
 app = Flask(__name__)
 
+HTML_PAGE = """
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FamPay API - @ROXXOP</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,sans-serif}
+body{background:#0a0a0f;color:#e5e5e5;padding:20px}
+.container{max-width:900px;margin:0 auto}
+.header{text-align:center;padding:30px 0;border-bottom:1px solid #222}
+.header h1{font-size:28px;background:linear-gradient(90deg,#00d9ff,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.badge{display:inline-block;background:#1a1a2e;color:#00d9ff;padding:4px 12px;border-radius:20px;font-size:12px;margin-top:12px;border:1px solid #00d9ff33}
+.card{background:#111119;border:1px solid #222;border-radius:12px;padding:20px;margin:16px 0}
+.card h3{color:#00d9ff;font-size:15px;margin-bottom:4px}
+.card p{color:#888;font-size:13px;margin-bottom:10px}
+.code{background:#0a0a0f;border:1px solid #222;border-radius:8px;padding:12px;font-family:monospace;font-size:13px;color:#00ff88;overflow-x:auto;word-break:break-all}
+.btn{background:#7c3aed;color:#fff;border:none;padding:7px 14px;border-radius:8px;cursor:pointer;font-size:12px;margin-top:10px}
+.dev{text-align:center;padding:30px;color:#666;font-size:13px}
+.dev a{color:#00d9ff;text-decoration:none}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="header">
+<h1>💳 FamPay Public API [FREE]</h1>
+<p>Instant UPI QR & Verification for <b>papai69@fam</b></p>
+<span class="badge">👨‍💻 Dev: @ROXXOP | Base: {{base}}/</span>
+</div>
+<div class="card">
+<h3>1️⃣ Health Check</h3>
+<p>Check API is live</p>
+<div class="code">GET {{base}}/health</div>
+</div>
+<div class="card">
+<h3>2️⃣ Create API Key</h3>
+<p>Get your FAM_xxx key</p>
+<div class="code">POST {{base}}/create_key<br>{"gmail":"your@gmail.com","gpass":"abcdefghijklmnop","mobile":"6290439412"}</div>
+</div>
+<div class="card">
+<h3>3️⃣ Generate QR — fam_create</h3>
+<p>Create QR, get order_id (expires 5 min)</p>
+<div class="code">GET {{base}}/fam_create?amount=10&api_key=FAM_xxx</div>
+</div>
+<div class="card">
+<h3>4️⃣ Verify Payment — fam_verify</h3>
+<p>Verify after user pays</p>
+<div class="code">GET {{base}}/fam_verify?order_id=FAMPAY...&api_key=FAM_xxx</div>
+</div>
+<div class="card">
+<h3>5️⃣ Direct Verify</h3>
+<div class="code">GET {{base}}/api?Gmail=email&GPASS=pass&ID=utr</div>
+</div>
+<div class="card">
+<h3>6️⃣ Quick Pay QR</h3>
+<div class="code">GET {{base}}/pay?amount=100</div>
+</div>
+<div class="dev">Made with ❤️ by <a href="https://t.me/ROXXOP">@ROXXOP</a> | @FampayPaymentApi_Bot<br><span style="font-size:11px">JSON: <a href="{{base}}/?json=1">{{base}}/?json=1</a></span></div>
+</div>
+</body>
+</html>
+"""
+
 # === FIXED CONFIG ===
-FAMPAY_UPI = os.getenv("FAMPAY_UPI", "")
+FAMPAY_UPI = os.getenv("FAMPAY_UPI", "papai69@fam")
 GLOBAL_GMAIL = os.getenv("GMAIL", "")
 GLOBAL_GPASS = os.getenv("GPASS", "")
 
@@ -45,21 +109,21 @@ def mark_paid(id):
 @app.route('/')
 def home():
     base = request.host_url.rstrip('/')
-    return jsonify({
-        "ok": True,
-        "service": "FamPay Public API [FREE] - papai69@fam",
-        "base": base,
-        "endpoints": {
-            "health": f"GET {base}/health",
-            "pay": f"GET {base}/pay?amount=100",
-            "create_key": f"POST {base}/create_key  {{\"gmail\",\"gpass\",\"mobile\"}}",
-            "register_key": f"POST {base}/register_key  {{\"api_key\",\"gmail\",\"gpass\"}}  (Bot sync)",
-            "fam_create": f"GET {base}/fam_create?amount=10&api_key=FAM_xxx",
-            "fam_verify": f"GET {base}/fam_verify?order_id=FAMxxx&api_key=FAM_xxx",
-            "verify": f"GET {base}/verify?utr=UTR&api_key=FAM_xxx",
-            "direct_verify": f"GET {base}/api?Gmail=email&GPASS=pass&ID=utr"
-        }
-    })
+    if request.args.get('json') == '1' or request.args.get('format') == 'json':
+        return jsonify({
+            "ok": True,
+            "service": "FamPay Public API [FREE] - papai69@fam",
+            "base": base,
+            "dev": "@ROXXOP",
+            "endpoints": {
+                "health": f"GET {base}/health",
+                "pay": f"GET {base}/pay?amount=100",
+                "create_key": f"POST {base}/create_key",
+                "fam_create": f"GET {base}/fam_create?amount=10&api_key=FAM_xxx",
+                "fam_verify": f"GET {base}/fam_verify?order_id=FAMxxx&api_key=FAM_xxx"
+            }
+        })
+    return render_template_string(HTML_PAGE, base=base)
 
 @app.route('/health')
 def health():
