@@ -1,38 +1,48 @@
 from flask import Flask, request, jsonify
-import requests, os, json, urllib.parse, time, random, string
+import requests, os, json, urllib.parse, time, random
 from datetime import datetime
 
 app = Flask(__name__)
 
-# CONFIG - Render ENV me set karo
+# === FIXED CONFIG ===
 FAMPAY_UPI = os.getenv("FAMPAY_UPI", "papai69@fam")
-GMAIL = os.getenv("GMAIL", "") # fallback admin gmail
-GPASS = os.getenv("GPASS", "")
-ADMIN_KEY = os.getenv("API_KEY", "papifam123") # admin ke liye
+GLOBAL_GMAIL = os.getenv("GMAIL", "")
+GLOBAL_GPASS = os.getenv("GPASS", "")
 
+# In-memory stores (persist to file)
 KEYS_FILE = "keys.json"
 ORDERS_FILE = "orders.json"
-PAID_FILE = "paid.json"
 
-def load_json(f):
+def load_json_file(fname, default):
     try:
-        if os.path.exists(f):
-            with open(f, "r") as fh: return json.load(fh)
+        if os.path.exists(fname):
+            with open(fname, "r") as f:
+                return json.load(f)
     except: pass
-    return {}
+    return default
 
-def save_json(f, data):
+def save_json_file(fname, data):
     try:
-        with open(f, "w") as fh: json.dump(data, fh)
+        with open(fname, "w") as f:
+            json.dump(data, f)
+    except: pass
+
+# Load on start
+BotKeys = load_json_file(KEYS_FILE, {})  # api_key -> {gmail,gpass,mobile,created}
+Orders = load_json_file(ORDERS_FILE, {})  # order_id -> order
+PaidSet = set(load_json_file("paid.json", []))
+
+def save_keys(): save_json_file(KEYS_FILE, BotKeys)
+def save_orders(): save_json_file(ORDERS_FILE, Orders)
+def save_paid():
+    try: save_json_file("paid.json", list(PaidSet))
     except: pass
 
 def enc(s): return urllib.parse.quote(str(s), safe='')
-
-def gen_key():
-    return "FAM_" + ''.join(random.choices(string.hexdigits, k=32)).lower()
-
-def gen_order():
-    return "FAM" + str(int(time.time())) + ''.join(random.choices(string.digits, k=4))
+def is_paid(id): return str(id) in PaidSet
+def mark_paid(id):
+    PaidSet.add(str(id))
+    save_paid()
 
 @app.route('/')
 def home():
@@ -42,228 +52,194 @@ def home():
         "service": "FamPay Public API [FREE] - papai69@fam",
         "base": base,
         "endpoints": {
-            "create_key": f"POST {base}/create_key  {{gmail,gpass,mobile}}",
+            "health": f"GET {base}/health",
+            "pay": f"GET {base}/pay?amount=100",
+            "create_key": f"POST {base}/create_key  {{\"gmail\",\"gpass\",\"mobile\"}}",
+            "register_key": f"POST {base}/register_key  {{\"api_key\",\"gmail\",\"gpass\"}}  (Bot sync)",
             "fam_create": f"GET {base}/fam_create?amount=10&api_key=FAM_xxx",
             "fam_verify": f"GET {base}/fam_verify?order_id=FAMxxx&api_key=FAM_xxx",
-            "direct_verify": f"GET {base}/api?Gmail=email&GPASS=pass&ID=utr",
             "verify": f"GET {base}/verify?utr=UTR&api_key=FAM_xxx",
-            "pay": f"GET {base}/pay?amount=100",
-            "health": f"GET {base}/health"
+            "direct_verify": f"GET {base}/api?Gmail=email&GPASS=pass&ID=utr"
         }
     })
 
 @app.route('/health')
 def health():
-    keys = load_json(KEYS_FILE)
-    return jsonify({"ok": True, "upi": FAMPAY_UPI, "total_keys": len(keys), "admin_gmail_set": bool(GMAIL and GPASS)})
-
-# 1. CREATE API KEY - Public (sab log use kar sakte)
-@app.route('/create_key', methods=['POST', 'GET'])
-def create_key():
-    if request.method == 'GET':
-        gmail = request.args.get("gmail") or request.args.get("Gmail")
-        gpass = request.args.get("gpass") or request.args.get("GPASS")
-        mobile = request.args.get("mobile") or request.args.get("phone") or "0000000000"
-    else:
-        d = request.get_json(silent=True) or request.form.to_dict()
-        gmail = d.get("gmail") or d.get("Gmail")
-        gpass = d.get("gpass") or d.get("GPASS") or d.get("pass")
-        mobile = d.get("mobile") or d.get("phone") or "0000000000"
-    
-    if not gmail or "@" not in str(gmail): return jsonify({"ok": False, "error": "gmail required"}), 400
-    if not gpass or len(str(gpass).replace(" ","")) < 8: return jsonify({"ok": False, "error": "gpass (16 letter app password) required"}), 400
-    gpass = str(gpass).replace(" ","")
-    
-    # verify gmail via txg
-    test_id = "TESTVERIFY123"
-    try:
-        url = f"https://txggateway.vercel.app/api?Gmail={enc(gmail)}&GPASS={enc(gpass)}&ID={enc(test_id)}"
-        r = requests.get(url, timeout=20)
-        j = r.json()
-        sta = str(j.get("status","")).lower()
-        if sta not in ("not_found","verified","already_used") and r.status_code != 200:
-            if "auth" in str(j).lower() or "invalid" in str(j).lower():
-                return jsonify({"ok": False, "error": "Gmail/App Password invalid", "raw": j}), 401
-    except Exception as e:
-        return jsonify({"ok": False, "error": "Gmail verify failed", "details": str(e)[:200]}), 500
-
-    keys = load_json(KEYS_FILE)
-    # check already
-    for k,v in keys.items():
-        if v.get("gmail") == gmail:
-            return jsonify({"ok": True, "api_key": k, "message": "Already exists for this Gmail", "gmail": gmail})
-
-    api_key = gen_key()
-    for _ in range(5):
-        if api_key in keys: api_key = gen_key()
-        else: break
-    
-    keys[api_key] = {"gmail": gmail, "gpass": gpass, "mobile": str(mobile), "created": str(datetime.now())}
-    save_json(KEYS_FILE, keys)
-    return jsonify({"ok": True, "api_key": api_key, "gmail": gmail, "mobile": str(mobile), "message": "API Key Generated - Keep safe!"})
-
-# 2. CREATE QR - Anuj style
-@app.route('/fam_create', methods=['GET','POST'])
-def fam_create():
-    d = request.args.to_dict()
-    if request.method == 'POST':
-        jd = request.get_json(silent=True) or {}
-        d.update(jd)
-    amount = d.get("amount") or d.get("amt")
-    api_key = d.get("api_key") or d.get("key") or request.headers.get("x-api-key")
-    
-    if not amount: return jsonify({"ok": False, "error": "amount required, ex: /fam_create?amount=10&api_key=FAM_xxx"}), 400
-    if not api_key: return jsonify({"ok": False, "error": "api_key required"}), 401
-    
-    keys = load_json(KEYS_FILE)
-    # allow admin key also
-    if api_key != ADMIN_KEY and api_key not in keys:
-        return jsonify({"ok": False, "error": "Invalid api_key"}), 401
-    
-    try: amt = float(str(amount).replace("₹","").replace(",",""))
-    except: return jsonify({"ok": False, "error": "invalid amount"}), 400
-    if amt <= 0: return jsonify({"ok": False, "error": "amount > 0"}), 400
-    
-    order_id = gen_order()
-    upi_raw = f"upi://pay?pa={FAMPAY_UPI}&am={amt:.2f}&cu=INR&tn={order_id}"
-    qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=500x500&data={enc(upi_raw)}"
-    
-    orders = load_json(ORDERS_FILE)
-    orders[order_id] = {"amount": amt, "api_key": api_key, "upi": FAMPAY_UPI, "created": time.time(), "status": "pending"}
-    save_json(ORDERS_FILE, orders)
-    
-    return jsonify({
-        "ok": True,
-        "order_id": order_id,
-        "amount": amt,
-        "upi": FAMPAY_UPI,
-        "upi_link": upi_raw,
-        "qr_code": qr_url,
-        "expires_in": "5 minutes",
-        "verify_url": f"{request.host_url.rstrip('/')}/fam_verify?order_id={order_id}&api_key={api_key}"
-    })
-
-# 3. VERIFY - Anuj style
-@app.route('/fam_verify', methods=['GET','POST'])
-def fam_verify():
-    d = request.args.to_dict()
-    if request.method == 'POST':
-        jd = request.get_json(silent=True) or {}
-        d.update(jd)
-    order_id = d.get("order_id") or d.get("orderId") or d.get("id")
-    api_key = d.get("api_key") or request.headers.get("x-api-key")
-    utr = d.get("utr") or d.get("txn_id") or d.get("ID")
-    
-    if not api_key: return jsonify({"ok": False, "error": "api_key required"}), 401
-    keys = load_json(KEYS_FILE)
-    if api_key != ADMIN_KEY and api_key not in keys:
-        return jsonify({"ok": False, "error": "Invalid api_key"}), 401
-    if not order_id and not utr: return jsonify({"ok": False, "error": "order_id or utr required"}), 400
-    
-    # if utr directly given, use it
-    if utr and not order_id:
-        order_id = str(utr)
-
-    orders = load_json(ORDERS_FILE)
-    paid = load_json(PAID_FILE)
-    
-    # find order
-    order = orders.get(str(order_id))
-    if not order:
-        # try as UTR direct
-        if len(str(order_id)) >= 6:
-            # treat order_id as UTR
-            utr_to_check = str(order_id)
-            gmail = keys[api_key]["gmail"] if api_key in keys else GMAIL
-            gpass = keys[api_key]["gpass"] if api_key in keys else GPASS
-        else:
-            return jsonify({"ok": False, "status": "not_found", "error": "order_id not found"}), 404
-    else:
-        if str(order["api_key"]) != str(api_key) and api_key != ADMIN_KEY:
-            return jsonify({"ok": False, "error": "order_id not belong to this api_key"}), 403
-        utr_to_check = str(order_id)
-        # we need UTR from user? Actually Anuj flow: user pays then verify with order_id - gateway checks by order_id/utr
-        # For this public version we check via UTR = order_id if user sends utr as order_id
-        gmail = keys[api_key]["gmail"] if api_key in keys else GMAIL
-        gpass = keys[api_key]["gpass"] if api_key in keys else GPASS
-        amt_expected = order["amount"]
-        # if utr provided separately, use that
-        if utr and len(str(utr)) >= 6:
-            utr_to_check = str(utr)
-
-    if str(utr_to_check) in paid:
-        return jsonify({"ok": False, "status": "already_used", "order_id": str(order_id), "utr": str(utr_to_check)})
-
-    # call txg
-    try:
-        url = f"https://txggateway.vercel.app/api?Gmail={enc(gmail)}&GPASS={enc(gpass)}&ID={enc(utr_to_check)}"
-        r = requests.get(url, timeout=45)
-        j = r.json()
-        sta = str(j.get("status","")).lower()
-        ft = j.get("first_time", False)
-        amt_str = str(j.get("amount","0") or "0")
-        tmp=""; dot=False
-        for ch in amt_str:
-            if ch.isdigit(): tmp+=ch
-            elif ch=="." and not dot: tmp+=ch; dot=True
-        try: paid_amt = float(tmp) if tmp else 0
-        except: paid_amt = 0
-
-        if sta == "not_found":
-            return jsonify({"ok": False, "status": "not_found", "order_id": str(order_id), "message": "Payment not found - check UTR or wait 30 sec"})
-        if sta == "already_used":
-            paid[str(utr_to_check)] = True
-            save_json(PAID_FILE, paid)
-            return jsonify({"ok": False, "status": "already_used", "order_id": str(order_id)})
-        if sta == "verified" and ft == True:
-            if order and paid_amt != float(order["amount"]):
-                # amount mismatch still consider verified but warn
-                pass
-            paid[str(utr_to_check)] = True
-            if order_id: paid[str(order_id)] = True
-            save_json(PAID_FILE, paid)
-            if order_id in orders:
-                orders[order_id]["status"] = "verified"
-                orders[order_id]["utr"] = str(utr_to_check)
-                orders[order_id]["paid_amount"] = paid_amt
-                save_json(ORDERS_FILE, orders)
-            return jsonify({"ok": True, "status": "verified", "order_id": str(order_id), "utr": str(utr_to_check), "amount": paid_amt, "fampay_upi": FAMPAY_UPI})
-        return jsonify({"ok": False, "status": sta, "raw": j})
-    except Exception as e:
-        return jsonify({"ok": False, "error": str(e)[:300]}), 500
-
-# 4. DIRECT TXG style - https://your-api/api?Gmail=&GPASS=&ID=
-@app.route('/api', methods=['GET','POST'])
-def api_direct():
-    gmail = request.args.get("Gmail") or request.args.get("gmail")
-    gpass = request.args.get("GPASS") or request.args.get("gpass")
-    tid = request.args.get("ID") or request.args.get("id") or request.args.get("utr")
-    if request.method == 'POST':
-        jd = request.get_json(silent=True) or {}
-        gmail = gmail or jd.get("Gmail") or jd.get("gmail")
-        gpass = gpass or jd.get("GPASS") or jd.get("gpass")
-        tid = tid or jd.get("ID") or jd.get("id") or jd.get("utr")
-    if not gmail or not gpass or not tid:
-        return jsonify({"ok": False, "error": "Need Gmail, GPASS, ID"}), 400
-    try:
-        url = f"https://txggateway.vercel.app/api?Gmail={enc(gmail)}&GPASS={enc(gpass)}&ID={enc(tid)}"
-        r = requests.get(url, timeout=45)
-        return jsonify(r.json()), r.status_code
-    except Exception as e:
-        return jsonify({"ok": False, "error": str(e)[:300]}), 500
-
-@app.route('/verify', methods=['GET','POST'])
-def verify_alias():
-    return fam_verify()
+    return jsonify({"ok": True, "upi": FAMPAY_UPI, "global_gmail_set": bool(GLOBAL_GMAIL and GLOBAL_GPASS), "total_keys": len(BotKeys), "total_orders": len(Orders)})
 
 @app.route('/pay')
 def pay():
-    amt = request.args.get("amount","10")
-    try: amt_f = float(str(amt).replace("₹","").replace(",",""))
-    except: amt_f = 10
-    upi_raw = f"upi://pay?pa={FAMPAY_UPI}&am={amt_f:.2f}&cu=INR"
+    amount = request.args.get("amount", "10")
+    try: amount_f = float(str(amount).replace("₹","").replace(",",""))
+    except: return jsonify({"ok": False, "error": "invalid amount"}), 400
+    upi_raw = f"upi://pay?pa={FAMPAY_UPI}&am={amount_f:.2f}&cu=INR"
     qr = f"https://api.qrserver.com/v1/create-qr-code/?size=500x500&data={enc(upi_raw)}"
-    return jsonify({"ok": True, "upi": FAMPAY_UPI, "amount": amt_f, "upi_link": upi_raw, "qr_url": qr})
+    return jsonify({"ok": True, "upi": FAMPAY_UPI, "amount": amount_f, "upi_link": upi_raw, "qr_url": qr})
+
+# === 1. CREATE KEY via Render directly ===
+@app.route('/create_key', methods=['POST', 'GET'])
+def create_key():
+    data = request.get_json(silent=True) or {}
+    if not data: data = request.args.to_dict()
+    gmail = data.get("gmail") or data.get("email") or request.args.get("gmail")
+    gpass = data.get("gpass") or data.get("pass") or data.get("GPASS") or request.args.get("gpass")
+    mobile = data.get("mobile") or data.get("phone") or request.args.get("mobile") or "0000000000"
+    if not gmail or "@" not in str(gmail):
+        return jsonify({"status":"error","message":"gmail required"}), 400
+    if not gpass or len(str(gpass)) < 8:
+        return jsonify({"status":"error","message":"gpass (App Password 16 letters) required"}), 400
+    # generate unique key
+    api_key = "FAM_" + os.urandom(16).hex()
+    for _ in range(3):
+        if api_key in BotKeys: api_key = "FAM_" + os.urandom(16).hex()
+        else: break
+    BotKeys[api_key] = {"gmail": str(gmail).strip(), "gpass": str(gpass).strip().replace(" ",""), "mobile": str(mobile), "created": int(time.time()), "source": "render"}
+    save_keys()
+    return jsonify({"status":"success","api_key": api_key, "gmail": gmail, "dev":"@ANUJxCODER"})
+
+# === 2. REGISTER KEY from Bot (sync) ===
+@app.route('/register_key', methods=['POST'])
+def register_key():
+    data = request.get_json(silent=True) or {}
+    api_key = data.get("api_key") or data.get("key")
+    gmail = data.get("gmail") or data.get("email")
+    gpass = data.get("gpass") or data.get("pass")
+    mobile = data.get("mobile") or "0000000000"
+    if not api_key or not gmail or not gpass:
+        return jsonify({"status":"error","message":"api_key,gmail,gpass required"}), 400
+    BotKeys[str(api_key).strip()] = {"gmail": str(gmail).strip(), "gpass": str(gpass).strip().replace(" ",""), "mobile": str(mobile), "created": int(time.time()), "source": "bot"}
+    save_keys()
+    return jsonify({"status":"success","api_key": str(api_key).strip(), "dev":"@ANUJxCODER"})
+
+# === 3. FAM CREATE (Generate QR) ===
+@app.route('/fam_create', methods=['GET','POST'])
+def fam_create():
+    data = request.get_json(silent=True) or {}
+    qs = request.args.to_dict()
+    # merge
+    for k,v in data.items():
+        if k.lower() not in [x.lower() for x in qs]: qs[k.lower()] = v
+    # normalize lower keys
+    nq = {str(k).lower(): v for k,v in qs.items()}
+    api_key = nq.get("api_key") or nq.get("apikey") or nq.get("key")
+    amount = nq.get("amount") or nq.get("amt")
+    if not api_key: return jsonify({"status":"error","message":"api_key required","example":"?amount=10&api_key=YOUR_KEY","dev":"@ANUJxCODER"}), 400
+    api_key = str(api_key).strip()
+    info = BotKeys.get(api_key)
+    if not info: return jsonify({"status":"error","message":"Invalid api_key","dev":"@ANUJxCODER"}), 401
+    if not amount: return jsonify({"status":"error","message":"amount required","dev":"@ANUJxCODER"}), 400
+    try: amount_f = float(str(amount).replace("₹","").replace(",",""))
+    except: amount_f = 0
+    if amount_f < 1 or amount_f > 100000:
+        return jsonify({"status":"error","message":"amount must be 1-100000","dev":"@ANUJxCODER"}), 400
+    # generate order_id
+    order_id = "FAMPAY" + datetime.now().strftime("%Y%m%d%H%M%S") + os.urandom(3).hex().upper()
+    upi_raw = f"upi://pay?pa={FAMPAY_UPI}&am={amount_f:.2f}&cu=INR&tn={order_id}"
+    qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=400x400&data={enc(upi_raw)}"
+    order = {"order_id": order_id, "amount": amount_f, "amount_str": f"{amount_f:.2f}", "api_key": api_key, "gmail": info.get("gmail",""), "gpass": info.get("gpass",""), "upi": FAMPAY_UPI, "upi_link": upi_raw, "qr_code": qr_url, "qr_url": qr_url, "created": int(time.time()), "expiry": int(time.time())+300, "status": "pending"}
+    Orders[order_id] = order
+    save_orders()
+    return jsonify({"status":"success","data":{"order_id": order_id, "amount": amount_f, "amount_str": f"{amount_f:.2f}", "upi": FAMPAY_UPI, "upi_link": upi_raw, "qr_code": qr_url, "qr_url": qr_url, "expires_in": 300, "expires_at": order["expiry"]}, "dev":"@ANUJxCODER"})
+
+# === 4. FAM VERIFY ===
+@app.route('/fam_verify', methods=['GET','POST'])
+def fam_verify():
+    data = request.get_json(silent=True) or {}
+    qs = request.args.to_dict()
+    for k,v in data.items():
+        if k.lower() not in [x.lower() for x in qs]: qs[k.lower()] = v
+    nq = {str(k).lower(): v for k,v in qs.items()}
+    api_key = nq.get("api_key") or nq.get("apikey") or nq.get("key")
+    order_id = nq.get("order_id") or nq.get("orderid") or nq.get("order") or nq.get("id")
+    utr_param = nq.get("utr") or nq.get("txn_id") or nq.get("txn")
+    if not api_key: return jsonify({"status":"error","message":"api_key required","dev":"@ANUJxCODER"}), 400
+    api_key = str(api_key).strip()
+    info = BotKeys.get(api_key)
+    if not info: return jsonify({"status":"error","message":"Invalid api_key","dev":"@ANUJxCODER"}), 401
+    # find order
+    oid = str(order_id).strip() if order_id else str(utr_param).strip() if utr_param else ""
+    if not oid: return jsonify({"status":"error","message":"order_id required","example":"?order_id=FAMPAY...&api_key=KEY","dev":"@ANUJxCODER"}), 400
+    order = Orders.get(oid)
+    exp_amt = float(order.get("amount",0)) if order else 0
+    gmail = info.get("gmail") or GLOBAL_GMAIL
+    gpass = info.get("gpass") or GLOBAL_GPASS
+    if not gmail or not gpass:
+        return jsonify({"status":"error","message":"Gmail not set for this API key","dev":"@ANUJxCODER"}), 500
+    if is_paid(oid):
+        return jsonify({"status":"error","message":"Already verified","order_id": oid, "dev":"@ANUJxCODER"}), 400
+    # decide target ID for gateway
+    target_id = str(utr_param).strip() if utr_param else oid
+    url = f"https://txggateway.vercel.app/api?Gmail={enc(gmail)}&GPASS={enc(gpass)}&ID={enc(target_id)}"
+    try:
+        r = requests.get(url, timeout=30)
+        j = r.json()
+    except Exception as e:
+        return jsonify({"status":"error","message":"Verification timeout - try again","order_id": oid, "dev":"@ANUJxCODER"}), 500
+    sta = str(j.get("status","")).lower()
+    ft = j.get("first_time", False)
+    amt_str = str(j.get("amount","0") or "0")
+    tmp="";dot=False
+    for ch in amt_str:
+        if ch.isdigit(): tmp+=ch
+        elif ch=="." and not dot: tmp+=ch; dot=True
+    try: paid_amt=float(tmp) if tmp else 0
+    except: paid_amt=0
+    if sta=="not_found":
+        return jsonify({"status":"error","message":"Transaction failed - Payment not received","order_id": oid, "dev":"@ANUJxCODER"})
+    if sta=="already_used":
+        mark_paid(oid)
+        return jsonify({"status":"error","message":"Transaction already verified","order_id": oid, "dev":"@ANUJxCODER"})
+    if sta=="verified" and ft==True:
+        mark_paid(oid)
+        if utr_param: mark_paid(str(utr_param))
+        txn_id=str(j.get("txn_id","") or target_id)
+        utr_val=str(j.get("utr","") or txn_id)
+        if txn_id: mark_paid(txn_id)
+        if utr_val: mark_paid(utr_val)
+        if order:
+            order["status"]="verified"
+            Orders[oid]=order
+            save_orders()
+        return jsonify({"status":"success","data":{"order_id": oid, "transaction_id": txn_id, "amount": paid_amt, "utr": utr_val, "sender_name": str(j.get("sender","") or "FamPay User"), "payment_time_ist": str(j.get("payment_time","") or datetime.now().strftime("%d-%m-%Y %H:%M"))}, "dev":"@ANUJxCODER"})
+    return jsonify({"status":"error","message": str(j.get("message","Verification failed")), "order_id": oid, "dev":"@ANUJxCODER", "raw": j})
+
+# === 5. DIRECT VERIFY alias (like TxG) ===
+@app.route('/api', methods=['GET','POST'])
+def direct_api():
+    gmail = request.args.get("Gmail") or request.args.get("gmail") or request.json.get("Gmail") if request.is_json else request.args.get("Gmail")
+    gpass = request.args.get("GPASS") or request.args.get("gpass") or (request.json.get("GPASS") if request.is_json else None)
+    tid = request.args.get("ID") or request.args.get("id") or request.args.get("utr")
+    if request.is_json:
+        j = request.get_json(silent=True) or {}
+        gmail = gmail or j.get("Gmail") or j.get("gmail")
+        gpass = gpass or j.get("GPASS") or j.get("gpass")
+        tid = tid or j.get("ID") or j.get("id") or j.get("utr")
+    if not gmail or not gpass or not tid:
+        return jsonify({"status":"error","message":"Gmail, GPASS, ID required"}), 400
+    url = f"https://txggateway.vercel.app/api?Gmail={enc(gmail)}&GPASS={enc(gpass)}&ID={enc(tid)}"
+    try:
+        r = requests.get(url, timeout=30)
+        return jsonify(r.json()), r.status_code
+    except Exception as e:
+        return jsonify({"status":"error","message": str(e)[:200]}), 500
+
+@app.route('/verify', methods=['GET','POST'])
+def verify():
+    # alias to fam_verify but with utr
+    qs = request.args.to_dict()
+    if request.is_json:
+        j=request.get_json(silent=True) or {}
+        for k,v in j.items(): qs[k]=v
+    api_key = qs.get("api_key") or qs.get("key") or request.headers.get("x-api-key")
+    utr = qs.get("utr") or qs.get("id") or qs.get("ID")
+    if not api_key or not utr:
+        return jsonify({"ok": False, "error":"api_key and utr required"}), 400
+    # reuse fam_verify logic via internal call
+    fake_qs = {"api_key": api_key, "order_id": utr, "utr": utr}
+    # set args for fam_verify
+    request.args = fake_qs  # hack not needed, just call directly
+    return fam_verify()
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
