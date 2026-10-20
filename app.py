@@ -1,14 +1,143 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template_string
 import requests, os, json, urllib.parse, time, random
 from datetime import datetime
 
 app = Flask(__name__)
 
+HTML_PAGE = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FamPay API | Payment Documentation</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Inter,system-ui,-apple-system,sans-serif}
+body{background:linear-gradient(180deg,#7b61ff 0%,#6a5cff 100%);min-height:100vh;padding:0}
+.top{color:#fff;text-align:center;padding:18px 16px 6px;font-size:13px;letter-spacing:.3px}
+.hero{max-width:900px;margin:0 auto;padding:10px 16px}
+.card{background:#fff;border-radius:22px;padding:18px;box-shadow:0 10px 30px rgba(0,0,0,.18);margin:12px 0}
+.badge{display:inline-block;background:#eef0ff;color:#6a5cff;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.h1{font-size:20px;font-weight:800;margin:10px 0 6px;color:#111}
+.muted{color:#6b7280;font-size:13px;line-height:1.5}
+.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:12px}
+@media(max-width:700px){.grid{grid-template-columns:1fr}}
+.stat{background:#f8f7ff;border:1px solid #eee;border-radius:16px;padding:12px;text-align:center}
+.stat b{font-size:17px;color:#111}
+.stat p{font-size:11px;color:#6b7280;margin-top:3px}
+.code{background:#0f0f12;color:#00ff88;border-radius:12px;padding:12px;font-family:monospace;font-size:12px;overflow:auto;word-break:break-all;border:1px solid #222;margin-top:10px}
+.code .y{color:#ffd60a}.code .p{color:#9d7dff}
+.btn{width:100%;background:#111;border-radius:12px;color:#fff;padding:12px;text-align:center;font-weight:700;margin-top:10px;display:block;text-decoration:none;font-size:13px}
+.btn-blue{background:#3b82ff}
+.chip{display:inline-block;background:#f3f0ff;color:#6a5cff;padding:6px 10px;border-radius:20px;font-size:11px;font-weight:600;margin-right:6px}
+.feature{display:flex;gap:12px;align-items:center;padding:14px;background:#fff;border-radius:16px;margin:10px 0}
+.icon{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.why{background:#fff;border-radius:22px;padding:18px;margin:14px 0}
+.why h2{text-align:center;font-size:18px;margin-bottom:6px}
+.why .mini{text-align:center;color:#6b7280;font-size:12px;margin-bottom:14px}
+.mini-card{background:#fff;border:1px solid #eee;border-radius:16px;padding:16px;text-align:center;margin:10px 0;box-shadow:0 6px 16px rgba(0,0,0,.06)}
+.footer{background:#fff;border-radius:22px;padding:18px;text-align:center;margin:14px 0}
+.dot{width:8px;height:8px;background:#3b82ff;border-radius:50%;display:inline-block}
+a{color:#3b82ff;text-decoration:none}
+</style>
+</head>
+<body>
+<div class="top">FamPay API | Payment Documentation &nbsp; <span style="opacity:.7">fampay-api-7msf.onrender.com</span></div>
+
+<div class="hero">
+
+<div class="card">
+<span class="badge">✦ Official API Infrastructure</span>
+<div class="h1">FamPay Payment API</div>
+<p class="muted">Enterprise-grade UPI payment gateway for <b>papai69@fam</b> — Instant QR & verification with sub-200ms response.</p>
+<div style="margin-top:10px">
+<span class="chip">API v2.0</span>
+<span class="chip">24/7 Active</span>
+<span class="chip">Global Access</span>
+</div>
+<div class="grid">
+<div class="stat"><b>99.9%</b><p>Uptime</p></div>
+<div class="stat"><b>&lt;200ms</b><p>Response</p></div>
+<div class="stat"><b>24/7</b><p>Support</p></div>
+</div>
+</div>
+
+<div class="card">
+<div style="display:flex;gap:8px;align-items:center">
+<span style="background:#3b82ff;color:#fff;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700">API BASE</span>
+<span style="font-weight:700;font-size:13px">Live Endpoint</span>
+</div>
+<p class="muted" style="margin-top:8px">Base URL for all requests</p>
+<div class="code"><span class="y">GET</span> {{base}}/</div>
+<div class="code" style="color:#aaa">curl {{base}}/health</div>
+</div>
+
+<div class="card">
+<b>1️⃣ Generate QR — Create Order</b>
+<p class="muted">Create payment QR, get order_id (expires 5 min)</p>
+<div class="code"><span class="y">GET</span> {{base}}/fam_create<span class="p">?amount=10&api_key=FAM_xxx</span></div>
+<pre class="code">{
+  "status": "success",
+  "data": {
+    "order_id": "FAMPAY20260507...",
+    "amount": 10,
+    "upi": "papai69@fam",
+    "qr_code": "https://api.qrserver.com/..."
+  },
+  "dev": "@ROXXOP"
+}</pre>
+<a class="btn" href="{{base}}/fam_create?amount=10&api_key=DEMO" target="_blank">Try Generate QR</a>
+</div>
+
+<div class="card">
+<b>2️⃣ Verify Payment</b>
+<p class="muted">Verify after user pays</p>
+<div class="code"><span class="y">GET</span> {{base}}/fam_verify<span class="p">?order_id=FAMPAY...&api_key=FAM_xxx</span></div>
+<pre class="code" style="color:#00ff88">Success: {"status":"success","data":{"amount":10,"utr":"3012..."},"dev":"@ROXXOP"}</pre>
+<pre class="code" style="color:#ff6b6b">Failed:  {"status":"error","message":"Transaction failed - Payment not received"}</pre>
+<a class="btn btn-blue" href="{{base}}/fam_verify?order_id=FAMPAYDEMO&api_key=DEMO" target="_blank">Try Verify</a>
+</div>
+
+<div class="why">
+<h2>⭐ Why Choose FamPay API?</h2>
+<p class="mini">Trusted by developers — fast, secure, easy</p>
+<div class="mini-card">
+<div class="icon" style="background:#eef0ff;margin:0 auto">🚀</div>
+<b>Lightning Fast</b>
+<p class="muted">Instant payment verification with &lt;200ms response time</p>
+</div>
+<div class="mini-card">
+<div class="icon" style="background:#e6f9f0;margin:0 auto">🛡️</div>
+<b>Bank-Grade Security</b>
+<p class="muted">End-to-end encryption with SSL/TLS protocols</p>
+</div>
+<div class="mini-card">
+<div class="icon" style="background:#f3e8ff;margin:0 auto">&lt;/&gt;</div>
+<b>Developer Friendly</b>
+<p class="muted">Simple RESTful API with comprehensive documentation</p>
+</div>
+</div>
+
+<div class="footer">
+<div class="badge">OFFICIAL API INFRASTRUCTURE</div>
+<div style="margin:14px 0;font-size:14px">
+🛡️ &nbsp; 🔒 &nbsp; ⚙️
+</div>
+<div style="font-size:13px"><span class="dot"></span> API v2.0 &nbsp; <span class="dot" style="background:#10b981"></span> 24/7 Active &nbsp; <span class="dot" style="background:#f59e0b"></span> Global Access</div>
+<p style="margin-top:14px"><a href="https://t.me/ROXXOP" target="_blank">✈️ Join Support Community</a></p>
+<p class="muted" style="margin-top:6px">Dev: <b>@ROXXOP</b> • <a href="https://t.me/FampayPaymentApi_Bot">Telegram Bot</a></p>
+<p class="muted" style="font-size:11px;margin-top:8px">JSON: <a href="{{base}}/?json=1">{{base}}/?json=1</a></p>
+</div>
+
+</div>
+</body>
+</html>
+"""
+
 # === FIXED CONFIG ===
 FAMPAY_UPI = os.getenv("FAMPAY_UPI", "papai69@fam")
 GLOBAL_GMAIL = os.getenv("GMAIL", "")
 GLOBAL_GPASS = os.getenv("GPASS", "")
-
 KEYS_FILE = "keys.json"
 ORDERS_FILE = "orders.json"
 
@@ -45,21 +174,10 @@ def mark_paid(id):
 @app.route('/')
 def home():
     base = request.host_url.rstrip('/')
-    return jsonify({
-        "ok": True,
-        "service": "FamPay Public API [FREE] - papai69@fam",
-        "base": base,
-        "endpoints": {
-            "health": f"GET {base}/health",
-            "pay": f"GET {base}/pay?amount=100",
-            "create_key": f"POST {base}/create_key  {{\"gmail\",\"gpass\",\"mobile\"}}",
-            "register_key": f"POST {base}/register_key  {{\"api_key\",\"gmail\",\"gpass\"}}  (Bot sync)",
-            "fam_create": f"GET {base}/fam_create?amount=10&api_key=FAM_xxx",
-            "fam_verify": f"GET {base}/fam_verify?order_id=FAMxxx&api_key=FAM_xxx",
-            "verify": f"GET {base}/verify?utr=UTR&api_key=FAM_xxx",
-            "direct_verify": f"GET {base}/api?Gmail=email&GPASS=pass&ID=utr"
-        }
-    })
+    if request.args.get('json') == '1' or request.args.get('format') == 'json':
+        return jsonify({"ok": True, "service": "FamPay Public API [FREE] - papai69@fam", "base": base, "dev": "@ROXXOP",
+            "endpoints": {"health": f"GET {base}/health", "pay": f"GET {base}/pay?amount=100", "create_key": f"POST {base}/create_key", "fam_create": f"GET {base}/fam_create?amount=10&api_key=FAM_xxx", "fam_verify": f"GET {base}/fam_verify?order_id=FAMxxx&api_key=FAM_xxx"}})
+    return render_template_string(HTML_PAGE, base=base)
 
 @app.route('/health')
 def health():
