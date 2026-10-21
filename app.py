@@ -82,7 +82,7 @@ body{font-family:'Inter',sans-serif;background:linear-gradient(180deg,#7C6CF6 0%
 <div class="badge-top">FamPay DevPortal</div>
 <div style="font-size:10px;font-weight:800;letter-spacing:1.2px;color:#6B7280;margin-top:-6px;margin-bottom:6px">AUTOMATED UPI SOLUTIONS</div>
 <h1 class="h1">FamPay <span>DevPortal</span></h1>
-<a href="https://t.me/FamPayVerifyBot" target="_blank" class="btn-dark">● GET API KEY</a>
+<a href="https://t.me/FampayPaymentApi_Bot" target="_blank" class="btn-dark">● GET API KEY</a>
 <p class="sub">Integrate FamPay automatic payment verification into your applications with lightning-fast speed.</p>
 </div>
 <div class="card center">
