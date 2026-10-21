@@ -1,4 +1,3 @@
-
 import os, json, time, secrets, re, math, ssl, imaplib, email
 from datetime import datetime, timezone
 from email.header import decode_header, make_header
@@ -127,7 +126,7 @@ body{font-family:'Inter',sans-serif;background:linear-gradient(180deg,#7C6CF6 0%
   "status": "success",
   "data": {
     "order_id": "FAMPAY2026042300401024D72AA0",
-    "qr_url": "https://fampay.anujbots.xyz/qr_codes/FAMPAY2026042300401024D72AA0.png",
+    "qr_url": "https://fampay-api-7msf.onrender.com/qr_codes/FAMPAY2026042300401024D72AA0.png",
     "upi_id": "papai69@fam",
     "amount": "10",
     "created_at_ist": "21-10-2026 23:00:41",
@@ -153,7 +152,7 @@ body{font-family:'Inter',sans-serif;background:linear-gradient(180deg,#7C6CF6 0%
     "transaction_id": "FMPIB5255631361",
     "amount": 10,
     "utr": "301268197755",
-    "sender_name": "Anuj Patel",
+    "sender_name": "Papai Paul",
     "payment_time_ist": "23-04-2026 00:42:12"
   },
   "dev": "@ROXXOP"
