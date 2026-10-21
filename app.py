@@ -153,7 +153,7 @@ body{font-family:'Inter',sans-serif;background:linear-gradient(180deg,#7C6CF6 0%
 <div class="footer"><div style="background:#fff;border-radius:20px;padding:16px">
 <div style="font-size:10px;font-weight:800;letter-spacing:1.2px;color:#6B7280"><span class="dot"></span>OFFICIAL API INFRASTRUCTURE</div>
 <div class="footer-links"><span>🔷 API v2.0</span><span>● 24/7 Active</span><span>🌐 Global Access</span></div>
-<div style="margin-top:12px"><a href="https://t.me/FamPayVerifyBot" style="background:#229ED9;color:#fff;padding:8px 16px;border-radius:20px;text-decoration:none;font-size:12px;font-weight:700">💬 Join Support Community</a></div>
+<div style="margin-top:12px"><a href="https://t.me/FampayPaymentApi_Bot" style="background:#229ED9;color:#fff;padding:8px 16px;border-radius:20px;text-decoration:none;font-size:12px;font-weight:700">💬 Join Support Community</a></div>
 </div></div></div>
 <script>function copyCode(btn){const pre=btn.closest('.code-wrap').querySelector('pre');navigator.clipboard.writeText(pre.innerText);const old=btn.innerHTML;btn.innerHTML='✅ COPIED';btn.style.background='#10B981';setTimeout(()=>{btn.innerHTML=old;btn.style.background='#7C6CF6'},1500);}</script>
 </body></html>
