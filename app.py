@@ -16,7 +16,7 @@ from flask import Flask, request, jsonify, render_template_string
 
 app = Flask(__name__)
 
-FAMPAY_UPI = os.getenv("FAMPAY_UPI", "papai69@fam")
+FAMPAY_UPI = os.getenv("FAMPAY_UPI")
 KEYS_FILE = "keys.json"
 ORDERS_FILE = "orders.json"
 PAID_FILE = "paid.json"
