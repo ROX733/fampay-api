@@ -23,31 +23,837 @@ PAID_FILE = "paid.json"
 LOCK = RLock()
 
 HTML_PAGE = """
+
+HTML_PAGE = r"""
 <!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>FamPay Payment API</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#7054e8">
+<title>FamPay API | Payment Documentation</title>
+
 <style>
-*{box-sizing:border-box;font-family:system-ui,sans-serif}
-body{margin:0;padding:16px;background:linear-gradient(135deg,#7b61ff,#9b6bff,#6a5cff)}
-main{max-width:650px;margin:auto}
-.card{background:white;border-radius:18px;padding:20px;margin:12px 0;box-shadow:0 8px 25px #0002}
-h1{text-align:center}.muted{color:#666}
-.code{background:#111;color:#00ff88;padding:12px;border-radius:10px;overflow-wrap:anywhere}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  --purple: #7054e8;
+  --purple-dark: #5237c8;
+  --pink: #e84cbd;
+  --ink: #17192b;
+  --muted: #73768a;
+  --line: #e8eaf2;
+  --panel: #ffffff;
+  --code: #14172a;
+}
+
+* { box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 24px;
+}
+
+body {
+  margin: 0;
+  color: var(--ink);
+  font-family: Inter, system-ui, sans-serif;
+  background: linear-gradient(135deg,#7565ed,#8c60d9,#6554cf,#8271ed);
+  background-size: 300% 300%;
+  animation: gradientFlow 16s ease infinite;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  opacity: .22;
+  background-image:
+    radial-gradient(circle at 25% 25%,#fff 1px,transparent 2px),
+    radial-gradient(circle at 75% 65%,#fff 1px,transparent 2px);
+  background-size: 31px 31px,47px 47px;
+  animation: patternDrift 25s linear infinite;
+}
+
+.glow {
+  position: fixed;
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  filter: blur(65px);
+  opacity: .28;
+  pointer-events: none;
+  z-index: -1;
+  animation: floatGlow 12s ease-in-out infinite alternate;
+}
+
+.glow.one { background: #ff70d4; top: 12%; left: -110px; }
+.glow.two { background: #91a9ff; right: -110px; top: 52%; animation-delay: -5s; }
+
+@keyframes gradientFlow {
+  0%,100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+@keyframes patternDrift {
+  from { background-position: 0 0,0 0; }
+  to { background-position: 90px 120px,-70px 80px; }
+}
+@keyframes floatGlow {
+  from { transform: translate3d(0,0,0) scale(.9); }
+  to { transform: translate3d(45px,-35px,0) scale(1.2); }
+}
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(25px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes shine {
+  0% { background-position: 180% 0; }
+  100% { background-position: -180% 0; }
+}
+@keyframes pulse {
+  0%,100% { box-shadow: 0 0 0 0 #7255e833; }
+  50% { box-shadow: 0 0 0 8px #7255e800; }
+}
+@keyframes iconFloat {
+  0%,100% { transform: translateY(0) rotate(0); }
+  50% { transform: translateY(-5px) rotate(-3deg); }
+}
+
+.page {
+  width: min(760px,100%);
+  margin: auto;
+  padding: 24px 15px 65px;
+}
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255,255,255,.97);
+  border: 1px solid #ffffff;
+  border-radius: 27px;
+  padding: 32px 23px 27px;
+  text-align: center;
+  box-shadow: 0 22px 65px #32207135;
+  animation: riseIn .8s cubic-bezier(.2,.7,.2,1) both;
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 5px;
+  background: linear-gradient(90deg,#6d52e8,#e34db8,#6d52e8);
+  background-size: 200% 100%;
+  animation: shine 5s linear infinite;
+}
+
+.hero-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  border-radius: 19px;
+  color: var(--purple);
+  background: #f0edff;
+  font-size: 28px;
+  font-weight: 900;
+  animation: iconFloat 3.5s ease-in-out infinite;
+}
+
+h1 {
+  margin: 18px 0 12px;
+  font-size: clamp(27px,6vw,39px);
+  letter-spacing: -1.8px;
+  line-height: 1.16;
+}
+
+.gradient-text {
+  color: #7252df;
+  background: linear-gradient(100deg,#6147db,#a344d3,#e348ac,#6147db);
+  background-size: 250% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shine 7s linear infinite;
+}
+
+.subtitle {
+  max-width: 520px;
+  margin: 0 auto;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  gap: 9px;
+  margin-top: 25px;
+}
+
+.stat {
+  border-radius: 13px;
+  padding: 12px 5px;
+  background: #f7f6ff;
+  border: 1px solid #efedfc;
+}
+
+.stat-icon { font-size: 17px; }
+.stat strong { display: block; margin-top: 5px; font-size: 12px; }
+.stat small { display: block; margin-top: 4px; font-size: 10px; color: var(--muted); }
+
+.nav {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 17px 2px 5px;
+  margin: 5px 0 10px;
+  scrollbar-width: none;
+  animation: riseIn .9s .1s both;
+}
+.nav::-webkit-scrollbar { display:none; }
+
+.nav a {
+  flex: 0 0 auto;
+  text-decoration: none;
+  background: #ffffffed;
+  border: 1px solid #ffffff;
+  border-radius: 100px;
+  padding: 10px 14px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #5540bb;
+  transition: .25s ease;
+}
+.nav a:hover {
+  color: white;
+  background: var(--purple);
+  transform: translateY(-3px);
+  box-shadow: 0 7px 18px #30208035;
+}
+
+.doc-card {
+  position: relative;
+  background: var(--panel);
+  border: 1px solid #ffffff;
+  border-radius: 23px;
+  padding: 23px 19px;
+  margin-top: 18px;
+  box-shadow: 0 14px 38px #34217626;
+  overflow: hidden;
+  transition: transform .3s ease, box-shadow .3s ease;
+}
+
+.doc-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg,#7354e9,#df49b9,#7354e9);
+  background-size: 200% 100%;
+}
+
+.doc-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 42px #34217635;
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity .65s ease,transform .65s cubic-bezier(.2,.7,.2,1);
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  font-size: clamp(16px,4vw,20px);
+  font-weight: 900;
+  letter-spacing: -.5px;
+}
+
+.card-icon {
+  flex: 0 0 43px;
+  height: 43px;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  background: #f0edff;
+  color: var(--purple);
+  font-size: 20px;
+}
+
+.kicker {
+  margin-top: 5px;
+  font-family: "JetBrains Mono",monospace;
+  color: #85849b;
+  font-size: 10px;
+  letter-spacing: .5px;
+}
+
+.description {
+  margin: 19px 0;
+  font-size: 13px;
+  color: #65687b;
+  line-height: 1.8;
+}
+
+.endpoint {
+  border: 1px solid #e2e4ef;
+  border-left: 4px solid var(--purple);
+  border-radius: 12px;
+  padding: 13px;
+  background: linear-gradient(135deg,#f8f8fc,#f2f3fa);
+  overflow-wrap: anywhere;
+}
+
+.method {
+  display: inline-block;
+  padding: 6px 10px;
+  color: white;
+  background: linear-gradient(135deg,#8058f0,#5d3ed1);
+  border-radius: 7px;
+  box-shadow: 0 3px 9px #7054e844;
+  font: 800 10px "JetBrains Mono",monospace;
+}
+
+.endpoint code {
+  display: block;
+  margin-top: 10px;
+  color: #6046c8;
+  font: 500 11px/1.8 "JetBrains Mono",monospace;
+  overflow-wrap: anywhere;
+}
+
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 22px 0 12px;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .35px;
+}
+
+.section-label span { color: #7152dc; font-size: 16px; }
+
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid #ececf4;
+  border-radius: 12px;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 390px;
+  font-size: 11px;
+  text-align: left;
+}
+
+th {
+  background: #f5f6fb;
+  color: #797c90;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+th,td { padding: 13px 11px; border-bottom: 1px solid #ececf4; }
+tr:last-child td { border-bottom: 0; }
+td { color: #55596d; line-height: 1.65; }
+td code { color: #6248c8; font-family: "JetBrains Mono",monospace; }
+
+.tag {
+  display: inline-block;
+  padding: 4px 7px;
+  border-radius: 6px;
+  font-size: 9px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.required { color: #c52d50; background: #ffe6ec; }
+.optional { color: #315fca; background: #e7edff; }
+
+.code-box {
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+  background: var(--code);
+  color: #e8eaff;
+  box-shadow: inset 0 0 0 1px #ffffff0b;
+}
+
+.code-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid #ffffff12;
+  color: #b7bbd2;
+  font: 10px "JetBrains Mono",monospace;
+}
+
+.dots { display: flex; gap: 5px; }
+.dots i { width: 7px; height: 7px; border-radius: 50%; background: #ff6b80; }
+.dots i:nth-child(2) { background: #ffd166; }
+.dots i:nth-child(3) { background: #4bdfa0; }
+
+.copy {
+  border: 1px solid #ffffff25;
+  border-radius: 7px;
+  padding: 7px 9px;
+  background: #292d49;
+  color: #fff;
+  font: 700 10px Inter,sans-serif;
+  cursor: pointer;
+  transition: .2s ease;
+}
+.copy:hover { background: #7655e9; transform: scale(1.04); }
+.copy:active { transform: scale(.96); }
+
+pre {
+  margin: 0;
+  padding: 17px 15px;
+  overflow-x: auto;
+  white-space: pre;
+  font: 11px/1.85 "JetBrains Mono",monospace;
+  color: #e4e7ff;
+  scrollbar-width: thin;
+}
+
+.json-key { color: #bba3ff; }
+.json-string { color: #ffe080; }
+.json-number { color: #71e6bd; }
+
+.note {
+  margin-top: 12px;
+  padding: 12px 13px;
+  border: 1px solid #e6e0ff;
+  border-radius: 10px;
+  background: #f7f4ff;
+  color: #66549c;
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: #20c982;
+  animation: pulse 2s infinite;
+}
+
+.footer {
+  color: #ffffffde;
+  text-align: center;
+  padding: 26px 10px 0;
+  font-size: 11px;
+  line-height: 1.9;
+}
+.footer strong { color: #fff; }
+
+.back-top {
+  position: fixed;
+  right: 17px;
+  bottom: 18px;
+  width: 43px;
+  height: 43px;
+  border: 1px solid #ffffff70;
+  border-radius: 14px;
+  color: white;
+  background: #6247d9;
+  box-shadow: 0 8px 25px #2b17654a;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(10px);
+  transition: .25s ease;
+  font-size: 18px;
+}
+.back-top.show { opacity: 1; pointer-events: auto; transform: translateY(0); }
+
+@media (min-width:600px) {
+  .page { padding: 38px 20px 70px; }
+  .hero { padding: 42px 36px 32px; }
+  .doc-card { padding: 27px 26px; }
+  .description { font-size: 14px; }
+  pre { font-size: 12px; padding: 20px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,*::before,*::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+}
 </style>
 </head>
-<body><main>
-<div class="card">
-<h1>FamPay Payment API</h1>
-<p class="muted">UPI orders and Gmail payment-email matching.</p>
-</div>
-<div class="card"><b>Create API Key</b><p class="code">POST /create_key</p><p>JSON: gmail, gpass, mobile</p></div>
-<div class="card"><b>Create Order</b><p class="code">GET /fam_create?amount=10&amp;api_key=YOUR_KEY</p></div>
-<div class="card"><b>Verify Payment</b><p class="code">GET /fam_verify?order_id=ORDER_ID&amp;api_key=YOUR_KEY</p></div>
-<div class="card"><b>Health</b><p class="code">GET /health</p></div>
-</main></body></html>
+
+<body>
+<div class="glow one"></div>
+<div class="glow two"></div>
+
+<main class="page" id="top">
+  <header class="hero">
+    <div class="hero-icon">&lt;/&gt;</div>
+    <h1>API <span class="gradient-text">Documentation</span></h1>
+    <p class="subtitle">
+      Integrate FamPay payment verification into your applications
+      with fast API requests and automatic Gmail payment-email matching.
+    </p>
+
+    <div class="stats">
+      <div class="stat">
+        <span class="stat-icon">🟢</span>
+        <strong>API Service</strong>
+        <small><span class="status-dot"></span>Available</small>
+      </div>
+      <div class="stat">
+        <span class="stat-icon">⚡</span>
+        <strong>REST API</strong>
+        <small>JSON responses</small>
+      </div>
+      <div class="stat">
+        <span class="stat-icon">🔐</span>
+        <strong>API Key</strong>
+        <small>Key-based access</small>
+      </div>
+    </div>
+  </header>
+
+  <nav class="nav" aria-label="Documentation navigation">
+    <a href="#create-key">🔑 API Key</a>
+    <a href="#create-order">▦ Create Order</a>
+    <a href="#verify">✓ Verify Payment</a>
+    <a href="#health">♥ Health</a>
+  </nav>
+
+  <section class="doc-card reveal" id="create-key">
+    <h2 class="card-title">
+      <span class="card-icon">🔑</span>
+      <span>1. Generate API Key</span>
+    </h2>
+    <div class="kicker">POST · AUTHENTICATION</div>
+    <p class="description">
+      Register your Gmail account to generate an API key.
+      Use a Google App Password, not your normal Gmail password.
+    </p>
+
+    <div class="endpoint">
+      <span class="method">POST</span>
+      <code>/create_key</code>
+    </div>
+
+    <div class="section-label"><span>☷</span> REQUEST HEADERS</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Header</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td><code>Content-Type</code></td><td>application/json</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section-label"><span>⌘</span> REQUEST BODY</div>
+    <div class="code-box">
+      <div class="code-head">
+        <span>JSON · Request</span>
+        <button class="copy" data-copy="key-request">▣ COPY</button>
+      </div>
+      <pre id="key-request">{
+  "gmail": "your-email@gmail.com",
+  "gpass": "your16charapppass",
+  "mobile": "9876543210"
+}</pre>
+    </div>
+
+    <div class="section-label"><span>⟨/⟩</span> SUCCESS RESPONSE</div>
+    <div class="code-box">
+      <div class="code-head">
+        <span>JSON · 201 Created</span>
+        <button class="copy" data-copy="key-response">▣ COPY</button>
+      </div>
+      <pre id="key-response">{
+  "status": "success",
+  "api_key": "FAM_your_generated_api_key",
+  "gmail": "your-email@gmail.com"
+}</pre>
+    </div>
+
+    <div class="note">⚠️ Keep your API key and Gmail App Password private. The example above uses placeholder values.</div>
+  </section>
+
+  <section class="doc-card reveal" id="create-order">
+    <h2 class="card-title">
+      <span class="card-icon">▦</span>
+      <span>2. Create Payment Order</span>
+    </h2>
+    <div class="kicker">GET / POST · PAYMENT REQUEST</div>
+    <p class="description">
+      Generate a unique UPI payment order. The response includes the order
+      ID, UPI link, QR-code URL and expiry information.
+    </p>
+
+    <div class="endpoint">
+      <span class="method">GET</span>
+      <code>/fam_create?amount=10&amp;api_key=YOUR_API_KEY</code>
+    </div>
+
+    <div class="section-label"><span>☷</span> REQUEST PARAMETERS</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>api_key</code></td>
+            <td><span class="tag required">Required</span></td>
+            <td>Your generated API key.</td>
+          </tr>
+          <tr>
+            <td><code>amount</code></td>
+            <td><span class="tag required">Required</span></td>
+            <td>Amount in INR, greater than 0 and at most 100000.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section-label"><span>⟨/⟩</span> SUCCESS RESPONSE</div>
+    <div class="code-box">
+      <div class="code-head">
+        <span>JSON · 201 Created</span>
+        <button class="copy" data-copy="order-response">▣ COPY</button>
+      </div>
+      <pre id="order-response">{
+  "status": "success",
+  "data": {
+    "order_id": "FAMPAY20261021120000AB12CD34",
+    "amount": 10.0,
+    "upi": "papai69@fam",
+    "upi_link": "upi://pay?...",
+    "qr_code": "https://api.qrserver.com/...",
+    "expires_in": 300,
+    "expires_at": 1792584300
+  }
+}</pre>
+    </div>
+
+    <div class="note">ℹ️ Example values are illustrative. Your server returns a newly generated order ID, QR URL and expiry timestamp for each request.</div>
+  </section>
+
+  <section class="doc-card reveal" id="verify">
+    <h2 class="card-title">
+      <span class="card-icon">✓</span>
+      <span>3. Verify Payment</span>
+    </h2>
+    <div class="kicker">GET / POST · PAYMENT VERIFICATION</div>
+    <p class="description">
+      Check the Gmail inbox linked to your API key for a matching payment
+      email containing the order ID, amount and transaction reference.
+    </p>
+
+    <div class="endpoint">
+      <span class="method">GET</span>
+      <code>/fam_verify?order_id=ORDER_ID&amp;api_key=YOUR_API_KEY</code>
+    </div>
+
+    <div class="section-label"><span>☷</span> REQUEST PARAMETERS</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>api_key</code></td>
+            <td><span class="tag required">Required</span></td>
+            <td>The API key that owns the order.</td>
+          </tr>
+          <tr>
+            <td><code>order_id</code></td>
+            <td><span class="tag required">Required</span></td>
+            <td>The order ID returned by the create-order endpoint.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section-label"><span>⟨/⟩</span> VERIFIED RESPONSE</div>
+    <div class="code-box">
+      <div class="code-head">
+        <span>JSON · Success</span>
+        <button class="copy" data-copy="verify-response">▣ COPY</button>
+      </div>
+      <pre id="verify-response">{
+  "status": "success",
+  "data": {
+    "order_id": "FAMPAY20261021120000AB12CD34",
+    "transaction_id": "123456789012",
+    "utr": "123456789012",
+    "amount": 10.0,
+    "payment_time": "Payment email date",
+    "sender_name": "Payment email sender"
+  }
+}</pre>
+    </div>
+
+    <div class="section-label"><span>◷</span> POSSIBLE STATUSES</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Status</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td><span class="tag optional">success</span></td><td>Payment email matched and order verified.</td></tr>
+          <tr><td><span class="tag optional">pending</span></td><td>No matching payment email was found yet.</td></tr>
+          <tr><td><span class="tag required">error</span></td><td>Invalid key, mismatch, review or another error.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note">⚠️ Email matching alone is not authoritative payment confirmation. For production payments, verify transactions with your payment provider or bank.</div>
+  </section>
+
+  <section class="doc-card reveal" id="health">
+    <h2 class="card-title">
+      <span class="card-icon">♥</span>
+      <span>4. API Health Check</span>
+    </h2>
+    <div class="kicker">GET · SERVICE STATUS</div>
+    <p class="description">
+      Check whether the API service is responding and view its basic counters.
+    </p>
+
+    <div class="endpoint">
+      <span class="method">GET</span>
+      <code>/health</code>
+    </div>
+
+    <div class="section-label"><span>⟨/⟩</span> RESPONSE FORMAT</div>
+    <div class="code-box">
+      <div class="code-head">
+        <span>JSON · 200 OK</span>
+        <button class="copy" data-copy="health-response">▣ COPY</button>
+      </div>
+      <pre id="health-response">{
+  "ok": true,
+  "imap_host": "imap.gmail.com",
+  "upi_configured": true,
+  "total_keys": 0,
+  "total_orders": 0
+}</pre>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <strong>FamPay API</strong> · Payment Documentation<br>
+    Built for API integration · <a href="#top" style="color:white">Back to top ↑</a>
+  </footer>
+</main>
+
+<button class="back-top" id="backTop" aria-label="Back to top">↑</button>
+
+<script>
+(function () {
+  "use strict";
+
+  // Smooth reveal as documentation sections enter the screen.
+  const sections = document.querySelectorAll(".reveal");
+
+  if ("IntersectionObserver" in window) {
+    const observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("visible");
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.08 });
+
+    sections.forEach(function (section) {
+      observer.observe(section);
+    });
+  } else {
+    sections.forEach(function (section) {
+      section.classList.add("visible");
+    });
+  }
+
+  // Copy the exact contents of a code sample.
+  document.querySelectorAll("[data-copy]").forEach(function (button) {
+    button.addEventListener("click", async function () {
+      const target = document.getElementById(button.dataset.copy);
+      if (!target) return;
+
+      const original = button.textContent;
+      const text = target.innerText;
+
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(text);
+        } else {
+          const area = document.createElement("textarea");
+          area.value = text;
+          area.style.position = "fixed";
+          area.style.opacity = "0";
+          document.body.appendChild(area);
+          area.select();
+          const copied = document.execCommand("copy");
+          area.remove();
+          if (!copied) throw new Error("Copy unavailable");
+        }
+
+        button.textContent = "✓ COPIED";
+        button.style.background = "#138b68";
+      } catch (error) {
+        button.textContent = "SELECT & COPY";
+      }
+
+      setTimeout(function () {
+        button.textContent = original;
+        button.style.background = "";
+      }, 1600);
+    });
+  });
+
+  // Animated back-to-top button.
+  const backTop = document.getElementById("backTop");
+
+  window.addEventListener("scroll", function () {
+    backTop.classList.toggle("show", window.scrollY > 350);
+  }, { passive: true });
+
+  backTop.addEventListener("click", function () {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  // Smooth navigation with a reduced-motion accessibility fallback.
+  document.querySelectorAll('.nav a[href^="#"]').forEach(function (link) {
+    link.addEventListener("click", function (event) {
+      const target = document.querySelector(link.getAttribute("href"));
+      if (!target) return;
+      event.preventDefault();
+      target.scrollIntoView({
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "auto" : "smooth",
+        block: "start"
+      });
+    });
+  });
+})();
+</script>
+</body>
+</html>
 """
 
 
