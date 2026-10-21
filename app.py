@@ -97,7 +97,7 @@ body{font-family:'Inter',sans-serif;background:linear-gradient(180deg,#7C6CF6 0%
 <div class="card">
 <div class="sec-head"><div class="sec-num">1</div><div><div class="sec-title">Generate QR Code</div><div class="sec-type">POST Payment Request</div></div></div>
 <div class="sec-desc">Generate a dynamic UPI QR code for receiving instant payments with automatic verification.</div>
-<div class="endpoint"><span class="method">GET</span><code>/fam_create?amount=AMOUNT&api_key=YOUR_API_KEY</code></div>
+<div class="endpoint"><span class="method">GET</span><code>https://fampay-api-7msf.onrender.com/fam_create?amount=AMOUNT&api_key=YOUR_API_KEY</code></div>
 <div class="req-title">📋 REQUEST PARAMETERS</div>
 <div class="table"><div class="t-head"><span>PARAMETER</span><span>TYPE</span><span>DESCRIPTION</span></div>
 <div class="t-row"><b>amount</b><span class="tag-req">Required</span><span>Payment Amount (1 - 100000)</span></div>
@@ -120,7 +120,7 @@ body{font-family:'Inter',sans-serif;background:linear-gradient(180deg,#7C6CF6 0%
 <div class="card">
 <div class="sec-head"><div class="sec-num">2</div><div><div class="sec-title">Verify Payment Status</div><div class="sec-type">Check Transaction Completion</div></div></div>
 <div class="sec-desc">Verify if payment has been successfully received using the unique Order ID.</div>
-<div class="endpoint"><span class="method">GET</span><code>/fam_verify?order_id=ORDER_ID&api_key=YOUR_API_KEY</code></div>
+<div class="endpoint"><span class="method">GET</span><code>https://fampay-api-7msf.onrender.com/fam_verify?order_id=ORDER_ID&api_key=YOUR_API_KEY</code></div>
 <div class="req-title">📋 REQUEST PARAMETERS</div>
 <div class="table"><div class="t-head"><span>PARAMETER</span><span>TYPE</span><span>DESCRIPTION</span></div>
 <div class="t-row"><b>order_id</b><span class="tag-req">Required</span><span>The unique order ID from QR generation</span></div>
