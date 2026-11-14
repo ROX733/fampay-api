@@ -190,6 +190,51 @@ body:before{content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;bac
 @keyframes emojiPop{0%{transform:scale(1)}45%{transform:scale(1.22) rotate(-8deg)}75%{transform:scale(.94) rotate(5deg)}100%{transform:scale(1)}}
 
 
+
+/* V4 — premium visual system: restrained palette, sculpted surfaces, visible motion */
+:root{--purple:#6654e8;--purple2:#9879ff;--shadow:0 22px 65px rgba(38,29,92,.10)}
+html[data-theme=dark]{--purple:#ad9bff;--purple2:#c2a4ff}
+body{background-image:radial-gradient(ellipse at 50% -12%,rgba(119,96,255,.13),transparent 44%),linear-gradient(180deg,rgba(255,255,255,.25),transparent 42%)}
+.shell{position:relative}
+.hero{border:1px solid rgba(255,255,255,.14);background:linear-gradient(118deg,#11152d 0%,#25204d 43%,#4b358f 76%,#7255bf 100%);background-size:220% 220%;animation:premiumGradient 10s ease-in-out infinite;box-shadow:0 28px 85px rgba(53,38,126,.27)}
+.hero:before{width:440px;height:440px;right:-95px;top:-235px;background:radial-gradient(circle,rgba(196,174,255,.38),rgba(131,105,255,.12) 42%,transparent 70%);filter:blur(2px);animation:premiumOrb 7s ease-in-out infinite alternate}
+.hero:after{width:330px;height:330px;right:18%;bottom:-235px;background:radial-gradient(circle,rgba(255,191,235,.2),rgba(164,137,255,.08) 48%,transparent 72%);animation:premiumOrb 9s ease-in-out infinite alternate-reverse}
+.hero-inner:after{content:"";position:absolute;z-index:-1;right:-245px;top:15px;width:300px;height:300px;border:1px solid rgba(255,255,255,.15);border-radius:50%;box-shadow:0 0 0 24px rgba(255,255,255,.025),0 0 0 50px rgba(255,255,255,.018);animation:ringOrbit 24s linear infinite}
+.motion-version{border:1px solid rgba(220,208,255,.32);background:linear-gradient(115deg,rgba(255,255,255,.16),rgba(165,139,255,.18));box-shadow:inset 0 1px rgba(255,255,255,.2),0 8px 26px rgba(10,8,40,.18);letter-spacing:1.6px}
+.motion-version b{background:linear-gradient(135deg,#fff,#ded4ff);color:#4d3caa}
+.motion-spark{width:7px;height:7px;border-radius:50%;background:#9cf3d0;box-shadow:0 0 0 5px rgba(156,243,208,.13),0 0 18px #9cf3d0;animation:sparkPulse 1.8s ease-in-out infinite}
+.stat,.doc-card,.feature,.info-card,.base-card,.key-card,.console-card{position:relative;overflow:hidden;border-color:color-mix(in srgb,var(--line) 78%,var(--purple) 22%);box-shadow:0 12px 38px rgba(34,27,82,.055),inset 0 1px rgba(255,255,255,.7)}
+html[data-theme=dark] .stat,html[data-theme=dark] .doc-card,html[data-theme=dark] .feature,html[data-theme=dark] .info-card,html[data-theme=dark] .base-card,html[data-theme=dark] .key-card,html[data-theme=dark] .console-card{box-shadow:0 14px 42px rgba(0,0,0,.2),inset 0 1px rgba(255,255,255,.035)}
+.stat:before,.doc-card:before,.feature:before,.info-card:before{content:"";position:absolute;inset:0 0 auto;height:2px;background:linear-gradient(90deg,transparent,var(--purple2),#d9caff,transparent);opacity:.7}
+.stat-icon,.doc-icon,.feature-icon{display:grid;place-items:center;flex:0 0 auto;border:1px solid rgba(128,105,235,.2);background:linear-gradient(145deg,#fff 0%,#f0edff 55%,#e2dcff 100%);color:#5b49c9;box-shadow:inset 0 1px 0 #fff,0 8px 20px rgba(83,65,180,.12);font-family:'Space Grotesk';font-weight:700}
+.stat-icon{width:42px;height:42px;border-radius:14px;font-size:20px}
+.doc-icon{width:46px;height:46px;border-radius:15px;font-size:13px;letter-spacing:.5px}
+.feature-icon{width:44px;height:44px;border-radius:14px;font-size:21px;margin-bottom:13px}
+html[data-theme=dark] .stat-icon,html[data-theme=dark] .doc-icon,html[data-theme=dark] .feature-icon{background:linear-gradient(145deg,#30294f,#211d3d);color:#c9bcff;border-color:#9c87ff35;box-shadow:inset 0 1px #ffffff15,0 9px 22px #05040d66}
+.stat-icon,.doc-icon,.feature-icon{animation:premiumIconDrift 5.5s ease-in-out infinite}
+.stat:nth-child(2) .stat-icon,.feature:nth-child(2) .feature-icon{animation-delay:1s}
+.stat:nth-child(3) .stat-icon,.feature:nth-child(3) .feature-icon{animation-delay:2s}
+.doc-card:nth-of-type(2) .doc-icon{animation-delay:1.2s}
+.doc-card:hover .doc-icon,.feature:hover .feature-icon,.stat:hover .stat-icon{animation:premiumIconFocus .65s cubic-bezier(.2,.8,.2,1)}
+.hero-pill{border:1px solid rgba(220,210,255,.2);background:linear-gradient(135deg,rgba(255,255,255,.13),rgba(255,255,255,.045));backdrop-filter:blur(12px);box-shadow:inset 0 1px rgba(255,255,255,.13);animation:pillFloat 5s ease-in-out infinite}
+.hero-pill:nth-child(2){animation-delay:1s}.hero-pill:nth-child(3){animation-delay:2s}
+.doc-card:hover,.feature:hover,.info-card:hover,.stat:hover{transform:translateY(-6px);box-shadow:0 24px 60px rgba(82,65,170,.15);border-color:rgba(132,111,255,.45)}
+.brand-mark{background:linear-gradient(145deg,#7462f5,#9b79ff 55%,#5946d4);box-shadow:0 9px 24px rgba(105,82,238,.35),inset 0 1px rgba(255,255,255,.38)}
+.brand-mark:after{animation:premiumSheen 5s ease-in-out infinite}
+.key-submit,.console-submit,.copy-base{background:linear-gradient(105deg,#5c4bd6,#8066f2 55%,#a077f6);box-shadow:0 9px 22px rgba(105,82,238,.2)}
+.reveal{opacity:0;transform:translateY(30px) scale(.985);transition:opacity .85s ease,transform .85s cubic-bezier(.16,1,.3,1)}
+.reveal.is-visible{opacity:1;transform:translateY(0) scale(1)}
+@keyframes premiumGradient{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@keyframes premiumOrb{0%{transform:translate3d(-18px,8px,0) scale(.92);opacity:.58}100%{transform:translate3d(24px,-14px,0) scale(1.12);opacity:1}}
+@keyframes ringOrbit{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes sparkPulse{0%,100%{transform:scale(.85);opacity:.7}50%{transform:scale(1.2);opacity:1}}
+@keyframes premiumIconDrift{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes premiumIconFocus{0%{transform:scale(1)}45%{transform:scale(1.12) rotate(-5deg)}100%{transform:scale(1)}}
+@keyframes pillFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes premiumSheen{0%,68%,100%{transform:translateX(-120%)}84%{transform:translateX(120%)}}
+@media(max-width:650px){.hero-inner:after{right:-205px;top:38px;width:210px;height:210px}.motion-version{font-size:9px}.stat-icon{width:40px;height:40px}}
+@media(prefers-reduced-motion:reduce){.hero,.hero:before,.hero:after,.hero-inner:after,.motion-version,.motion-spark,.hero-pill,.stat-icon,.doc-icon,.feature-icon,.brand-mark:after{animation:none!important}}
+
 /* V3: highly visible motion layer; scroll reveal above remains enabled */
 .motion-version{display:inline-flex;align-items:center;gap:9px;margin-top:15px;padding:9px 13px;border:1px solid #d7caff66;border-radius:999px;background:linear-gradient(100deg,#ffffff20,#bda7ff30,#ffffff12);color:#fff;font-size:10px;font-weight:900;letter-spacing:1.25px;box-shadow:0 0 0 1px #ffffff0c,0 8px 28px #a88aff30;animation:versionGlow 2.8s ease-in-out infinite}
 .motion-version b{padding:3px 7px;border-radius:7px;background:#fff;color:#5942c9;font-size:10px}
@@ -228,10 +273,10 @@ body:before{content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;bac
 <section class="hero">
   <div class="hero-inner">
     <div class="eyebrow"><span class="live-dot"></span> DEVELOPER PLATFORM</div>
-    <div class="motion-version">✨ MOTION UPDATE <b>V3</b> <span>LIVE UI</span></div>
+    <div class="motion-version"><span class="motion-spark"></span> DESIGN SYSTEM <b>V4</b> <span>LIVE</span></div>
     <h1>Payments made<br><span>simple & automatic.</span></h1>
     <p>Create UPI payment requests, generate hosted QR codes and verify incoming payments through your registered Gmail inbox — all through one straightforward API.</p>
-    <div class="hero-pills"><span class="hero-pill">⚡ UPI QR generation</span><span class="hero-pill">🔐 Gmail IMAP verification</span><span class="hero-pill">🧩 Simple REST endpoints</span></div>
+    <div class="hero-pills"><span class="hero-pill">UPI QR generation</span><span class="hero-pill">Gmail IMAP verification</span><span class="hero-pill">Simple REST endpoints</span></div>
   </div>
 </section>
 <section class="base-card">
@@ -240,15 +285,15 @@ body:before{content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;bac
   <p class="base-help">This is the root address of your API. Add an endpoint path to it when making requests — for example, <code>/fam_create</code> or <code>/fam_verify</code>. The endpoint examples below show the complete live URL.</p>
 </section>
 <div class="stats">
-  <div class="stat"><span class="stat-icon">📲</span><div><b>UPI payments</b><small>Dynamic QR requests</small></div></div>
-  <div class="stat"><span class="stat-icon">📩</span><div><b>Inbox matching</b><small>Gmail IMAP checks</small></div></div>
-  <div class="stat"><span class="stat-icon">🛡️</span><div><b>Private API keys</b><small>Merchant-based access</small></div></div>
+  <div class="stat"><span class="stat-icon" aria-hidden="true">₹</span><div><b>UPI payments</b><small>Dynamic QR requests</small></div></div>
+  <div class="stat"><span class="stat-icon" aria-hidden="true">@</span><div><b>Inbox matching</b><small>Gmail IMAP checks</small></div></div>
+  <div class="stat"><span class="stat-icon" aria-hidden="true">◇</span><div><b>Private API keys</b><small>Merchant-based access</small></div></div>
 </div>
 <section id="documentation">
   <div class="section-kicker">API REFERENCE</div><h2 class="section-heading">Documentation</h2>
   <p class="section-intro">Use your API key with the endpoints below. All responses are returned in JSON format.</p>
   <article class="doc-card">
-    <div class="doc-head"><div class="doc-icon">▦</div><div><h3 class="doc-title">Generate QR Code</h3><div class="doc-sub">CREATE A PAYMENT ORDER</div></div></div>
+    <div class="doc-head"><div class="doc-icon" aria-hidden="true">01</div><div><h3 class="doc-title">Generate QR Code</h3><div class="doc-sub">CREATE A PAYMENT ORDER</div></div></div>
     <p class="doc-desc">Create a new UPI payment request. The API returns a unique order ID and a QR image hosted on this API server. Each QR request expires after five minutes.</p>
     <div class="endpoint"><span class="method">GET</span><code id="createEndpoint">/fam_create?amount=AMOUNT&amp;api_key=YOUR_API_KEY</code></div>
     <div class="param-title">REQUEST PARAMETERS</div>
@@ -270,7 +315,7 @@ body:before{content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;bac
 }</pre></div>
   </article>
   <article class="doc-card">
-    <div class="doc-head"><div class="doc-icon">✓</div><div><h3 class="doc-title">Verify Payment Status</h3><div class="doc-sub">CHECK PAYMENT COMPLETION</div></div></div>
+    <div class="doc-head"><div class="doc-icon" aria-hidden="true">02</div><div><h3 class="doc-title">Verify Payment Status</h3><div class="doc-sub">CHECK PAYMENT COMPLETION</div></div></div>
     <p class="doc-desc">Check whether an order has been paid. Submit the order ID returned by the QR generation endpoint.</p>
     <div class="endpoint"><span class="method">GET</span><code id="verifyEndpoint">/fam_verify?order_id=ORDER_ID&amp;api_key=YOUR_API_KEY</code></div>
     <div class="param-title">REQUEST PARAMETERS</div>
@@ -312,9 +357,9 @@ body:before{content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;bac
   <div class="section-kicker">BUILT FOR DEVELOPERS</div><h2 class="section-heading">Why Choose FamPay API?</h2>
   <p class="section-intro">A compact workflow for creating payment requests and checking incoming transactions.</p>
   <div class="features">
-    <div class="feature"><div class="feature-icon">⚡</div><div><h3>Simple Integration</h3><p>Clear GET endpoints and JSON responses make it easy to connect your application.</p></div></div>
-    <div class="feature"><div class="feature-icon">🔒</div><div><h3>Merchant API Keys</h3><p>Each merchant gets a personal key after Gmail IMAP credentials are verified.</p></div></div>
-    <div class="feature"><div class="feature-icon">📱</div><div><h3>Hosted QR Codes</h3><p>QR images are generated and served directly from your API domain.</p></div></div>
+    <div class="feature"><div class="feature-icon" aria-hidden="true">↗</div><div><h3>Simple Integration</h3><p>Clear GET endpoints and JSON responses make it easy to connect your application.</p></div></div>
+    <div class="feature"><div class="feature-icon" aria-hidden="true">⌑</div><div><h3>Merchant API Keys</h3><p>Each merchant gets a personal key after Gmail IMAP credentials are verified.</p></div></div>
+    <div class="feature"><div class="feature-icon" aria-hidden="true">▣</div><div><h3>Hosted QR Codes</h3><p>QR images are generated and served directly from your API domain.</p></div></div>
   </div>
 </section>
 <section class="key-card" id="generate-api-key">
