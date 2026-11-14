@@ -198,7 +198,8 @@ html[data-theme=dark] .tip{background:#352c1d;color:#f5d994;border-color:#65502c
     "amount": 10,
     "utr": "301268197755",
     "sender_name": "Customer",
-    "payment_time_ist": "14-11-2026 18:02:12"
+    "payment_time_ist": "14-11-2026 18:02:12",
+    "total_request": "1"
   },
   "dev": "@ROXXOP"
 }</pre></div>
@@ -665,6 +666,8 @@ def serve_order_qr(order_id):
         order = Orders.get(order_id)
     if not order:
         return error("QR code not found", 404)
+    if int(time.time()) >= int(order.get("expires_at", 0)):
+        return error("QR Expired", 410)
 
     upi_link = str(order.get("upi_link", "")).strip()
     if not upi_link.startswith("upi://pay?"):
@@ -709,21 +712,39 @@ def fam_verify():
     oid=str((request.args.get("order_id") if request.method=="GET" else (request.get_json(silent=True) or {}).get("order_id",""))).strip()
     if not oid:
         return jsonify({"status":"error","message":"order_id required","dev":"@ROXXOP"}),400
+
+    # Count every authenticated verify request for this order, including pending
+    # and expired checks. Persist the counter so it survives server restarts.
     with LOCK:
         order=Orders.get(oid)
+        if not order:
+            return jsonify({"status":"error","message":"Transaction failed - Payment not received","order_id":oid,"dev":"@ROXXOP"}),404
+        order["total_request"]=int(order.get("total_request",0))+1
+        total_request=order["total_request"]
+        Orders[oid]=order
+        save_json(ORDERS_FILE,Orders)
+
         paid=PaidRecords.get(oid)
+        if paid:
+            paid["total_request"]=str(total_request)
+            PaidRecords[oid]=paid
+            save_json(PAID_FILE,PaidRecords)
+
     if paid:
-        return jsonify({"status":"success","data":paid,"dev":"@ROXXOP"})
-    if not order:
-        return jsonify({"status":"error","message":"Transaction failed - Payment not received","order_id":oid,"dev":"@ROXXOP"}),404
-    if int(time.time())>int(order.get("expires_at",0)):
-        return jsonify({"status":"error","message":"Transaction failed - Payment not received","order_id":oid,"dev":"@ROXXOP"})
+        return jsonify({"status":"success","data":paid,"dev":"@ROXXOP"}),200
+
+    # A QR/order expires exactly five minutes after creation. Never check Gmail
+    # for an expired order.
+    if int(time.time()) >= int(order.get("expires_at",0)):
+        return jsonify({"status":"error","message":"QR Expired","order_id":oid,"total_request":str(total_request),"dev":"@ROXXOP"}),410
+
     res,msg=check_gmail_payment(keys[api_key],order)
     if not res:
-        return jsonify({"status":"error","message":msg or "Transaction failed - Payment not received","order_id":oid,"dev":"@ROXXOP"}),200
+        return jsonify({"status":"error","message":msg or "Transaction failed - Payment not received","order_id":oid,"total_request":str(total_request),"dev":"@ROXXOP"}),200
 
+    res["total_request"]=str(total_request)
     with LOCK:
-        PaidRecords[oid] = res
-        save_json(PAID_FILE, PaidRecords)
+        PaidRecords[oid]=res
+        save_json(PAID_FILE,PaidRecords)
 
     return jsonify({"status":"success","data":res,"dev":"@ROXXOP"}),200
