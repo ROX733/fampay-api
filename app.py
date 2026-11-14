@@ -172,7 +172,7 @@ html[data-theme=dark] .tip{background:#352c1d;color:#f5d994;border-color:#65502c
   "status": "success",
   "data": {
     "order_id": "FAMPAY2026111400401024D72AA0",
-    "qr_url": "https://fampay-api-7msf.onrender.com/qr_codes/ORDER_ID.png",
+    "qr_url": "https://fampay-api-7msf.onrender.com/qr_codes/FAMPAY2026111400401024D72AA0.png",
     "upi_id": "merchant@upi",
     "amount": "10",
     "created_at_ist": "14-11-2026 18:00:00",
