@@ -426,7 +426,8 @@ html[data-theme=dark] .stat-icon,html[data-theme=dark] .doc-icon,html[data-theme
     <div class="field"><label for="keyGpass">Gmail App Password</label><input id="keyGpass" name="gpass" type="password" placeholder="16-character App Password" autocomplete="new-password" required></div>
     <div class="field"><label for="keyUpi">UPI ID</label><input id="keyUpi" name="upi" type="text" placeholder="yourname@bank" required></div>
     <div class="field"><label for="keyMobile">Mobile Number</label><input id="keyMobile" name="mobile" type="tel" inputmode="numeric" placeholder="10-digit mobile number" required></div>
-    <button class="key-submit" id="keySubmit" type="submit">🔐 Verify Gmail &amp; Generate API Key</button>
+    <div class="field" style="grid-column:1/-1"><label>Step 1: Telegram verification (required)</label><button type="button" id="verifyTelegram" class="key-submit" style="width:100%">✈️ Verify Telegram</button><div id="telegramStatus" class="key-note">Verify Telegram before generating an API key.</div></div>
+    <button class="key-submit" id="keySubmit" type="submit" disabled>🔐 Verify Gmail &amp; Generate API Key</button>
   </form>
   <p class="key-note">🔒 Enter a Google App Password, not your normal Gmail password. Your Gmail credentials are checked through IMAP before an API key is created. Use this page over HTTPS.</p>
   <div class="key-result" id="keyResult" role="status" aria-live="polite"></div>
@@ -530,10 +531,34 @@ document.getElementById('copyVerifyTest').addEventListener('click',async functio
   catch(e){this.textContent='COPY FAILED';}
   setTimeout(()=>this.textContent=old,1500);
 });
+let telegramToken='',telegramVerified=false;
+const tgButton=document.getElementById('verifyTelegram'),tgStatus=document.getElementById('telegramStatus'),keyButton=document.getElementById('keySubmit');
+tgButton.addEventListener('click',async()=>{
+ tgButton.disabled=true;
+ try{
+  const r=await fetch('/telegram/prelink',{method:'POST'}),j=await r.json();
+  if(!r.ok||!j.ok)throw Error('Could not start verification');
+  telegramToken=j.token;telegramVerified=false;keyButton.disabled=true;
+  tgStatus.replaceChildren();
+  const link=document.createElement('a');link.href=j.telegram_link;link.target='_blank';link.rel='noopener';link.textContent='✈️ Open Telegram Bot';link.style='color:var(--purple);font-weight:800;margin-right:12px';
+  const check=document.createElement('button');check.type='button';check.className='key-copy';check.textContent='Check Verification';
+  const status=document.createElement('span');
+  check.addEventListener('click',async()=>{
+   try{const response=await fetch('/telegram/prelink/status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:telegramToken})});
+    const result=await response.json();telegramVerified=!!result.verified;keyButton.disabled=!telegramVerified;
+    status.textContent=telegramVerified?' ✅ Verified! Generate your API key.':' ⏳ Press Start in Telegram, then check again.';
+   }catch(e){status.textContent=' Verification check failed.'}
+  });
+  tgStatus.append(link,check,status);
+ }catch(e){tgStatus.textContent='Could not start verification. Please retry.'}
+ finally{tgButton.disabled=false}
+});
 document.getElementById('apiKeyForm').addEventListener('submit',async function(e){
   e.preventDefault();
   const form=e.currentTarget,button=document.getElementById('keySubmit'),box=document.getElementById('keyResult');
   const data=Object.fromEntries(new FormData(form).entries());
+  if(!telegramVerified||!telegramToken){box.className='key-result error';box.style.display='block';box.textContent='Verify Telegram first.';return}
+  data.telegram_token=telegramToken;
   if(!data.upi.trim()||!data.mobile.trim()){box.className='key-result error';box.style.display='block';box.textContent='Please enter both UPI ID and mobile number.';return}
   button.disabled=true;button.textContent='⏳ Verifying Gmail…';box.style.display='none';
   try{
@@ -541,10 +566,9 @@ document.getElementById('apiKeyForm').addEventListener('submit',async function(e
     const result=await response.json();box.style.display='block';
     if(!response.ok||result.status!=='success'){box.className='key-result error';box.textContent=result.message||'Could not generate API key. Check your details.';return}
     box.className='key-result';
-    box.innerHTML='<b>✓ API key created successfully</b><div class="key-value" id="generatedKey"></div><button type="button" class="key-copy" id="copyGeneratedKey">COPY API KEY</button><p style="font-size:11px;margin-top:9px">Save this key securely. It will not be shown again on this page.</p><p style="margin-top:14px"><a id="telegramLinkButton" target="_blank" rel="noopener" style="display:inline-block;background:#229ED9;color:#fff;padding:11px 14px;border-radius:10px;font-weight:800;text-decoration:none">✈️ Connect Telegram Alerts</a></p><small>Link your Telegram account within 24 hours to receive personal alerts.</small>';
+    box.innerHTML='<b>✓ API key created and Telegram alerts enabled</b><div class="key-value" id="generatedKey"></div><button type="button" class="key-copy" id="copyGeneratedKey">COPY API KEY</button><p style="font-size:11px;margin-top:9px">Save this key securely. Telegram is already linked.</p>';
     document.getElementById('generatedKey').textContent=result.api_key;
-    const telegramLinkButton=document.getElementById('telegramLinkButton');
-    if(result.telegram_link){telegramLinkButton.href=result.telegram_link;}else{telegramLinkButton.style.display='none';}
+    telegramVerified=false;telegramToken='';keyButton.disabled=true;tgStatus.textContent='Verify Telegram for the next API key.';
     document.getElementById('copyGeneratedKey').addEventListener('click',async function(){try{await copyText(result.api_key);this.textContent='COPIED'}catch(e){this.textContent='COPY FAILED'}});
     form.reset();
   }catch(err){box.className='key-result error';box.style.display='block';box.textContent='Network error. Please try again.'}
@@ -772,6 +796,7 @@ def create_key():
             upi = str(request.args.get("upi","")).strip()
             mobile = str(request.args.get("mobile","")).strip()
             incoming_key = str(request.args.get("api_key","")).strip()
+            telegram_token = str(request.args.get("telegram_token","")).strip()
         else:
             body = request.get_json(silent=True) or {}
             gmail = str(body.get("gmail") or request.args.get("gmail","")).strip().lower()
@@ -779,7 +804,12 @@ def create_key():
             upi = str(body.get("upi") or request.args.get("upi","")).strip()
             mobile = str(body.get("mobile") or request.args.get("mobile","")).strip()
             incoming_key = str(body.get("api_key") or request.args.get("api_key","")).strip()
+            telegram_token = str(body.get("telegram_token") or request.args.get("telegram_token","")).strip()
         
+        from telegram_alerts import verified_prelink, consume_prelink
+        if not verified_prelink(telegram_token):
+            return error("Verify Telegram alerts first before generating an API key.", 403)
+
         # Both merchant UPI ID and mobile number are required for key registration.
         if not upi:
             return error("upi is required")
@@ -816,6 +846,10 @@ def create_key():
         except Exception:
             return error("Gmail IMAP verification failed. Please check your credentials and try again.")
 
+        telegram_chat_id = consume_prelink(telegram_token)
+        if not telegram_chat_id:
+            return error("Telegram verification expired or already used. Verify again.", 403)
+
         # Generate an API key only after Gmail IMAP verification succeeds.
         keys = get_all_keys()
         while True:
@@ -831,7 +865,9 @@ def create_key():
                 "mobile": mobile,
                 "upi": upi,
                 "created_at": datetime.now(timezone.utc).isoformat(),
-                "created_via": "bot"
+                "created_via": "bot",
+                "telegram_chat_id": telegram_chat_id,
+                "telegram_linked_at": int(time.time())
             }
             BotKeys.clear()
             BotKeys.update(latest)
