@@ -145,6 +145,30 @@ html[data-theme=dark] .tip{background:#352c1d;color:#f5d994;border-color:#65502c
 @media(max-width:650px){.info-grid,.console-form{grid-template-columns:1fr}.console-form .console-submit{grid-column:auto}}
 .footer{border-top:1px solid var(--line);padding:22px 0 32px;text-align:center;color:var(--muted);font-size:11px}
 @media(max-width:650px){.shell{padding:0 14px}.topbar{height:66px}.nav-link{display:none}.hero{padding:38px 23px 30px;border-radius:23px}.hero h1{letter-spacing:-1.3px}.stats{gap:8px}.stat{padding:11px;display:block}.stat-icon{margin-bottom:8px}.stat b{font-size:10px}.stat small{font-size:9px}.doc-card{padding:18px}.param-row{grid-template-columns:75px 72px 1fr;padding:10px 8px;font-size:10px}.features{grid-template-columns:1fr}.feature{display:flex;gap:13px;align-items:flex-start}.feature-icon{margin:0}.key-form{grid-template-columns:1fr}.key-submit{grid-column:auto}.base-url-row{align-items:flex-start;flex-direction:column}.copy-base{width:100%}}
+
+/* Premium motion layer */
+body{overflow-x:hidden}
+body:before{content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;background:radial-gradient(ellipse at 12% 12%,rgba(109,93,252,.10),transparent 35%),radial-gradient(ellipse at 88% 42%,rgba(166,107,255,.08),transparent 32%)}
+.hero{background-size:180% 180%;animation:heroGradient 14s ease infinite}
+.hero:before{animation:orbFloat 9s ease-in-out infinite alternate}
+.hero:after{animation:orbFloat 12s ease-in-out infinite alternate-reverse}
+.brand-mark{animation:markPulse 4s ease-in-out infinite}
+.hero h1 span{background-size:200% auto;animation:textShimmer 6s linear infinite}
+.doc-card,.feature,.info-card,.stat,.base-card,.key-card,.console-card{transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s,border-color .35s}
+.doc-card:hover,.feature:hover,.info-card:hover,.stat:hover{transform:translateY(-4px);box-shadow:0 22px 55px rgba(70,53,150,.12);border-color:rgba(109,93,252,.28)}
+.copy-base,.key-submit,.console-submit,.theme-btn,.copy-code,.key-copy{transition:transform .2s,filter .2s,box-shadow .2s}
+.copy-base:hover,.key-submit:hover,.console-submit:hover,.theme-btn:hover,.copy-code:hover,.key-copy:hover{transform:translateY(-2px);filter:brightness(1.06);box-shadow:0 9px 22px rgba(109,93,252,.2)}
+.reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.8,.2,1)}
+.reveal.is-visible{opacity:1;transform:translateY(0)}
+.hero-inner>*{animation:fadeUp .8s both}
+.hero-inner>*:nth-child(2){animation-delay:.10s}.hero-inner>*:nth-child(3){animation-delay:.20s}.hero-inner>*:nth-child(4){animation-delay:.30s}
+@keyframes heroGradient{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@keyframes orbFloat{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(-24px,18px,0) scale(1.08)}}
+@keyframes markPulse{0%,100%{box-shadow:0 8px 20px #6d5dfc44}50%{box-shadow:0 8px 28px #9b5bfa88}}
+@keyframes textShimmer{to{background-position:200% center}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}.reveal{opacity:1;transform:none}}
+
 </style>
 </head>
 <body>
@@ -284,6 +308,19 @@ html[data-theme=dark] .tip{background:#352c1d;color:#f5d994;border-color:#65502c
 <footer class="footer">FamPay API Developer Portal · API v2.0 · <span id="footerBaseUrl"></span></footer>
 </div>
 <script>
+
+// Smooth on-scroll reveals (respects reduced-motion preferences).
+(function(){
+  const targets=document.querySelectorAll('.base-card,.stat,.doc-card,.feature,.key-card,.info-card,.console-card,.section-kicker,.section-heading');
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){targets.forEach(el=>el.classList.add('is-visible'));return}
+  targets.forEach(el=>el.classList.add('reveal'));
+  if(!('IntersectionObserver' in window)){targets.forEach(el=>el.classList.add('is-visible'));return}
+  const observer=new IntersectionObserver(entries=>{
+    entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add('is-visible');observer.unobserve(entry.target)}});
+  },{threshold:.10,rootMargin:'0px 0px -35px 0px'});
+  targets.forEach(el=>observer.observe(el));
+})();
+
 const root=document.documentElement;
 const themeButton=document.getElementById('themeToggle');
 function setTheme(theme){root.dataset.theme=theme;localStorage.setItem('fampay-theme',theme);themeButton.textContent=theme==='dark'?'☀️ Light mode':'🌙 Dark mode'}
