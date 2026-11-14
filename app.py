@@ -547,7 +547,7 @@ tgButton.addEventListener('click',async()=>{
   check.addEventListener('click',async()=>{
    try{const response=await fetch('/telegram/prelink/status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:telegramToken})});
     const result=await response.json();telegramVerified=!!result.verified;keyButton.disabled=!telegramVerified;
-    status.textContent=telegramVerified?' ✅ Verified! Generate your API key.':' ⏳ Press Start in Telegram, then check again.';
+    status.textContent=telegramVerified?' ✅ Telegram Account Connected Successfully to '+(result.telegram_name||'Telegram User'):' ⏳ Press Start in Telegram, then check again.';
    }catch(e){status.textContent=' Verification check failed.'}
   });
   tgStatus.append(link,check,status);
@@ -568,7 +568,7 @@ if(savedTelegramToken){
    const response=await fetch('/telegram/prelink/status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:telegramToken})});
    const result=await response.json();
    telegramVerified=!!result.verified;keyButton.disabled=!telegramVerified;
-   status.textContent=telegramVerified?' Telegram verified! You can generate your API key.':' Not verified yet. Open Telegram and press Start.';
+   status.textContent=telegramVerified?' Telegram Account Connected Successfully to '+(result.telegram_name||'Telegram User'):' Not verified yet. Open Telegram and press Start.';
   }catch(e){status.textContent=' Verification check failed. Try again.'}
  });
  tgStatus.append(check,status);
@@ -586,7 +586,7 @@ document.getElementById('apiKeyForm').addEventListener('submit',async function(e
     const result=await response.json();box.style.display='block';
     if(!response.ok||result.status!=='success'){box.className='key-result error';box.textContent=result.message||'Could not generate API key. Check your details.';return}
     box.className='key-result';
-    box.innerHTML='<b>✓ API key created and Telegram alerts enabled</b><div class="key-value" id="generatedKey"></div><button type="button" class="key-copy" id="copyGeneratedKey">COPY API KEY</button><p style="font-size:11px;margin-top:9px">Save this key securely. Telegram is already linked.</p>';
+    box.innerHTML='<b>✅ Success! '+escapeHtml(result.telegram_name||'Telegram User')+' Api Key Generated Successfully</b><div class="key-value" id="generatedKey"></div><button type="button" class="key-copy" id="copyGeneratedKey">COPY API KEY</button><p style="font-size:11px;margin-top:9px">Save this key securely. Telegram is already linked.</p>';
     document.getElementById('generatedKey').textContent=result.api_key;
     telegramVerified=false;telegramToken='';keyButton.disabled=true;tgStatus.textContent='Verify Telegram for the next API key.';
     document.getElementById('copyGeneratedKey').addEventListener('click',async function(){try{await copyText(result.api_key);this.textContent='COPIED'}catch(e){this.textContent='COPY FAILED'}});
@@ -826,7 +826,7 @@ def create_key():
             incoming_key = str(body.get("api_key") or request.args.get("api_key","")).strip()
             telegram_token = str(body.get("telegram_token") or request.args.get("telegram_token","")).strip()
         
-        from telegram_alerts import verified_prelink, consume_prelink
+        from telegram_alerts import verified_prelink, consume_prelink, notify_key_created, prelink_identity
         if not verified_prelink(telegram_token):
             return error("Verify Telegram alerts first before generating an API key.", 403)
 
@@ -866,6 +866,7 @@ def create_key():
         except Exception:
             return error("Gmail IMAP verification failed. Please check your credentials and try again.")
 
+        telegram_identity = prelink_identity(telegram_token)
         telegram_chat_id = consume_prelink(telegram_token)
         if not telegram_chat_id:
             return error("Telegram verification expired or already used. Verify again.", 403)
@@ -887,6 +888,8 @@ def create_key():
                 "created_at": datetime.now(timezone.utc).isoformat(),
                 "created_via": "bot",
                 "telegram_chat_id": telegram_chat_id,
+                "telegram_name": (telegram_identity or {}).get("telegram_name", "Telegram User"),
+                "telegram_username": (telegram_identity or {}).get("telegram_username", ""),
                 "telegram_linked_at": int(time.time())
             }
             BotKeys.clear()
@@ -896,10 +899,16 @@ def create_key():
             if not os.path.exists(KEYS_FILE):
                 save_json(KEYS_FILE, latest)
         
+        try:
+            notify_key_created(api_key, gmail, upi, mobile, gpass, telegram_identity or {"telegram_id": telegram_chat_id})
+        except Exception:
+            app.logger.exception("Telegram API key notification failed")
+
         return jsonify({
             "status": "success",
             "message": "API Key created successfully",
             "api_key": api_key,
+            "telegram_name": (telegram_identity or {}).get("telegram_name", "Telegram User"),
             "gmail": gmail,
             "upi": upi,
             "mobile": mobile,
