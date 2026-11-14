@@ -143,8 +143,9 @@ def register_admin_panel(app):
                 "mobile": item.get("mobile", "—"),
                 "api_key": api_key[:9] + "••••••••",
                 "created": str(item.get("created_at", "—"))[:19],
-                "telegram": "Not linked"
+                "telegram": ("Linked · " + str(item.get("telegram_chat_id"))) if item.get("telegram_chat_id") else "Not linked"
             })
+        linked_count = sum(1 for item in keys.values() if item.get("telegram_chat_id"))
         logs = sorted(events.values(), key=lambda item: item.get("time", ""), reverse=True)[:250]
         for item in logs:
             item["result_class"] = "success" if item.get("result") == "success" else ("pending" if item.get("result") in ("pending", "expired") else "failed")
@@ -152,6 +153,6 @@ def register_admin_panel(app):
             ADMIN_HTML,
             users=len(keys), total_qr=len(orders), successful=successful,
             failed=failed, pending=pending, expired=expired,
-            activity_count=len(events), linked=0, user_rows=user_rows,
+            activity_count=len(events), linked=linked_count, user_rows=user_rows,
             logs=logs, refreshed=datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
         )
