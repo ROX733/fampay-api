@@ -534,12 +534,12 @@ document.getElementById('copyVerifyTest').addEventListener('click',async functio
 let telegramToken='',telegramVerified=false;
 const tgButton=document.getElementById('verifyTelegram'),tgStatus=document.getElementById('telegramStatus'),keyButton=document.getElementById('keySubmit');
 tgButton.addEventListener('click',async()=>{
- const telegramWindow=window.open('about:blank','_blank');
+ 
  tgButton.disabled=true;
  try{
   const r=await fetch('/telegram/prelink',{method:'POST'}),j=await r.json();
   if(!r.ok||!j.ok)throw Error('Could not start verification');
-  telegramToken=j.token;telegramVerified=false;keyButton.disabled=true;
+  telegramToken=j.token;sessionStorage.setItem('fampayTelegramToken',telegramToken);telegramVerified=false;keyButton.disabled=true;
   tgStatus.replaceChildren();
   const link=document.createElement('a');link.href=j.telegram_link;link.target='_blank';link.rel='noopener';link.textContent='✈️ Open Telegram Bot';link.style='color:var(--purple);font-weight:800;margin-right:12px';
   const check=document.createElement('button');check.type='button';check.className='key-copy';check.textContent='Check Verification';
@@ -551,10 +551,28 @@ tgButton.addEventListener('click',async()=>{
    }catch(e){status.textContent=' Verification check failed.'}
   });
   tgStatus.append(link,check,status);
-  if(telegramWindow){telegramWindow.location.href=j.telegram_link;}else{status.textContent=' Tap Open Telegram Bot to continue.';}
- }catch(e){if(telegramWindow)telegramWindow.close();tgStatus.textContent='Could not start verification. Please retry.'}
+  tgStatus.append(document.createTextNode(' Open Telegram, press Start, then return here and tap Check Verification.'));\n  window.location.assign(j.telegram_link);
+ }catch(e){tgStatus.textContent='Could not start verification. Please retry.'}
  finally{tgButton.disabled=false}
 });
+
+// Restore the verification session when the user returns from Telegram.
+const savedTelegramToken=sessionStorage.getItem('fampayTelegramToken');
+if(savedTelegramToken){
+ telegramToken=savedTelegramToken;
+ tgStatus.replaceChildren();
+ const check=document.createElement('button');check.type='button';check.className='key-copy';check.textContent='✅ Check Telegram Verification';
+ const status=document.createElement('span');
+ check.addEventListener('click',async()=>{
+  try{
+   const response=await fetch('/telegram/prelink/status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:telegramToken})});
+   const result=await response.json();
+   telegramVerified=!!result.verified;keyButton.disabled=!telegramVerified;
+   status.textContent=telegramVerified?' Telegram verified! You can generate your API key.':' Not verified yet. Open Telegram and press Start.';
+  }catch(e){status.textContent=' Verification check failed. Try again.'}
+ });
+ tgStatus.append(check,status);
+}
 document.getElementById('apiKeyForm').addEventListener('submit',async function(e){
   e.preventDefault();
   const form=e.currentTarget,button=document.getElementById('keySubmit'),box=document.getElementById('keyResult');
