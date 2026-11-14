@@ -128,6 +128,21 @@ html[data-theme=dark] .tip{background:#352c1d;color:#f5d994;border-color:#65502c
 .key-value{font:11px 'JetBrains Mono';padding:11px;background:#fff;border:1px solid #d8e5dc;border-radius:9px;margin-top:9px;color:#18251d}
 .key-copy{border:0;background:#202039;color:white;border-radius:8px;padding:9px 12px;font-weight:800;font-size:10px;margin-top:9px}
 .key-note{font-size:11px;color:var(--muted);line-height:1.65;margin-top:13px}
+.info-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:13px;margin:18px 0 30px}
+.info-card{background:var(--surface);border:1px solid var(--line);border-radius:17px;padding:18px}
+.info-card h3{font:700 14px 'Space Grotesk';margin:0 0 8px}
+.info-card p,.info-card li{font-size:11px;line-height:1.7;color:var(--muted)}
+.info-card ul{padding-left:18px;margin:8px 0 0}
+.console-card{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:24px;margin:18px 0 30px;box-shadow:var(--shadow)}
+.console-form{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.console-form .field{min-width:0}
+.console-form .console-submit{grid-column:1/-1;border:0;border-radius:12px;padding:14px;background:linear-gradient(100deg,#6d5dfc,#9b5bfa);color:#fff;font:800 13px 'DM Sans';cursor:pointer}
+.console-submit:disabled{opacity:.6;cursor:wait}
+.console-output{display:none;margin-top:18px;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.console-output-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 13px;background:var(--surface2);font-size:11px;font-weight:800}
+.console-output pre{margin:0;padding:15px;background:var(--code);color:#e4e6f3;font:11px/1.8 'JetBrains Mono';white-space:pre-wrap;overflow-wrap:anywhere;max-height:360px;overflow:auto}
+.console-hint{font-size:11px;line-height:1.7;color:var(--muted);margin-top:12px}
+@media(max-width:650px){.info-grid,.console-form{grid-template-columns:1fr}.console-form .console-submit{grid-column:auto}}
 .footer{border-top:1px solid var(--line);padding:22px 0 32px;text-align:center;color:var(--muted);font-size:11px}
 @media(max-width:650px){.shell{padding:0 14px}.topbar{height:66px}.nav-link{display:none}.hero{padding:38px 23px 30px;border-radius:23px}.hero h1{letter-spacing:-1.3px}.stats{gap:8px}.stat{padding:11px;display:block}.stat-icon{margin-bottom:8px}.stat b{font-size:10px}.stat small{font-size:9px}.doc-card{padding:18px}.param-row{grid-template-columns:75px 72px 1fr;padding:10px 8px;font-size:10px}.features{grid-template-columns:1fr}.feature{display:flex;gap:13px;align-items:flex-start}.feature-icon{margin:0}.key-form{grid-template-columns:1fr}.key-submit{grid-column:auto}.base-url-row{align-items:flex-start;flex-direction:column}.copy-base{width:100%}}
 </style>
@@ -190,7 +205,7 @@ html[data-theme=dark] .tip{background:#352c1d;color:#f5d994;border-color:#65502c
       <div class="param-row"><code>order_id</code><span class="required">Required</span><span>Order ID received from <code>/fam_create</code>.</span></div>
       <div class="param-row"><code>api_key</code><span class="required">Required</span><span>Your personal API key.</span></div>
     </div>
-    <div class="codebox"><div class="codebar"><span>SUCCESS RESPONSE</span><button class="copy-code" type="button" onclick="copyCode(this)">COPY</button></div><pre>{
+    <div class="codebox"><div class="codebar"><span>FIRST SUCCESSFUL VERIFY RESPONSE</span><button class="copy-code" type="button" onclick="copyCode(this)">COPY</button></div><pre>{
   "status": "success",
   "data": {
     "order_id": "FAMPAY2026111400401024D72AA0",
@@ -199,14 +214,22 @@ html[data-theme=dark] .tip{background:#352c1d;color:#f5d994;border-color:#65502c
     "utr": "301268197755",
     "sender_name": "Customer",
     "payment_time_ist": "14-11-2026 18:02:12",
-    "total_request": "1"
+    "already_verified": "false"
   },
+  "dev": "@ROXXOP"
+}</pre></div>
+    <div class="codebox"><div class="codebar"><span>SECOND REQUEST ONWARD — ALREADY VERIFIED</span><button class="copy-code" type="button" onclick="copyCode(this)">COPY</button></div><pre>{
+  "status": "success",
+  "order_id": "FAMPAY2026111400401024D72AA0",
+  "already_verified": "true",
+  "message": "Payment was already verified",
   "dev": "@ROXXOP"
 }</pre></div>
     <div class="codebox"><div class="codebar"><span>PENDING / NOT PAID RESPONSE</span><button class="copy-code" type="button" onclick="copyCode(this)">COPY</button></div><pre>{
   "status": "error",
   "message": "Transaction failed - Payment not received",
   "order_id": "FAMPAY2026111400401024D72AA0",
+  "already_verified": "false",
   "dev": "@ROXXOP"
 }</pre></div>
     <div class="tip">💡 QR requests expire after five minutes. Save the <b>order_id</b> and use it to check payment status. Keep your API key private.</div>
@@ -233,6 +256,30 @@ html[data-theme=dark] .tip{background:#352c1d;color:#f5d994;border-color:#65502c
   </form>
   <p class="key-note">🔒 Enter a Google App Password, not your normal Gmail password. Your Gmail credentials are checked through IMAP before an API key is created. Use this page over HTTPS.</p>
   <div class="key-result" id="keyResult" role="status" aria-live="polite"></div>
+</section>
+<section>
+  <div class="section-kicker">QUICK START &amp; IMPORTANT NOTES</div><h2 class="section-heading">After generating your API key</h2>
+  <p class="section-intro">Follow these steps to connect your app and understand the verification responses.</p>
+  <div class="info-grid">
+    <article class="info-card"><h3>🚀 1. Create a payment order</h3><p>Call <code>/fam_create</code> with your API key and amount. Save the returned <code>order_id</code> and show the returned QR code to the customer.</p></article>
+    <article class="info-card"><h3>🔎 2. Verify the payment</h3><p>Call <code>/fam_verify</code> with the same API key and order ID. The API checks the registered Gmail inbox for the matching payment email.</p></article>
+    <article class="info-card"><h3>♻️ 3. Already-verified behavior</h3><p>The first successful verification returns payment details with <code>already_verified: "false"</code>. Every later request for that paid order returns <code>already_verified: "true"</code>.</p></article>
+    <article class="info-card"><h3>⏱️ 4. QR expiry &amp; security</h3><p>Payment QR orders expire after five minutes. Keep your API key and Gmail App Password private. Never expose them in public frontend code or logs.</p></article>
+  </div>
+</section>
+<section class="console-card" id="test-console">
+  <div class="section-kicker">LIVE API TOOL</div><h2 class="section-heading">Payment Verify Test Console</h2>
+  <p class="section-intro">Enter your API key and an order ID to send a real verification request to this API. This checks the registered Gmail inbox; it is not a simulated response.</p>
+  <form class="console-form" id="verifyTestForm">
+    <div class="field"><label for="testApiKey">API Key</label><input id="testApiKey" name="api_key" type="password" placeholder="FAM_..." autocomplete="off" required></div>
+    <div class="field"><label for="testOrderId">Order ID</label><input id="testOrderId" name="order_id" type="text" placeholder="FAMPAY..." autocomplete="off" required></div>
+    <button class="console-submit" id="verifyTestSubmit" type="submit">▶ Run Payment Verification</button>
+  </form>
+  <p class="console-hint">⚠️ Use an order ID created with this API key. A successful first test marks the order as verified; all later tests for that same paid order will return <code>already_verified: "true"</code>. Do not share your API key.</p>
+  <div class="console-output" id="verifyTestOutput" aria-live="polite">
+    <div class="console-output-head"><span id="verifyTestStatus">API RESPONSE</span><button class="copy-code" id="copyVerifyTest" type="button">COPY JSON</button></div>
+    <pre id="verifyTestJson"></pre>
+  </div>
 </section>
 <footer class="footer">FamPay API Developer Portal · API v2.0 · <span id="footerBaseUrl"></span></footer>
 </div>
@@ -265,6 +312,35 @@ async function copyCode(button){
   catch(e){button.textContent='COPY FAILED';}
   setTimeout(()=>button.textContent=old,1500);
 }
+const verifyTestForm=document.getElementById('verifyTestForm');
+const verifyTestButton=document.getElementById('verifyTestSubmit');
+const verifyTestOutput=document.getElementById('verifyTestOutput');
+const verifyTestJson=document.getElementById('verifyTestJson');
+verifyTestForm.addEventListener('submit',async function(e){
+  e.preventDefault();
+  const values=Object.fromEntries(new FormData(verifyTestForm).entries());
+  verifyTestButton.disabled=true;verifyTestButton.textContent='⏳ Checking payment…';
+  verifyTestOutput.style.display='none';
+  try{
+    const response=await fetch('/fam_verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(values)});
+    const result=await response.json();
+    verifyTestJson.textContent=JSON.stringify(result,null,2);
+    document.getElementById('verifyTestStatus').textContent='API RESPONSE · HTTP '+response.status;
+    verifyTestOutput.style.display='block';
+  }catch(err){
+    verifyTestJson.textContent=JSON.stringify({status:'error',message:'Network error. Please try again.'},null,2);
+    document.getElementById('verifyTestStatus').textContent='REQUEST FAILED';
+    verifyTestOutput.style.display='block';
+  }finally{
+    verifyTestButton.disabled=false;verifyTestButton.textContent='▶ Run Payment Verification';
+  }
+});
+document.getElementById('copyVerifyTest').addEventListener('click',async function(){
+  const old=this.textContent;
+  try{await copyText(verifyTestJson.textContent);this.textContent='COPIED';}
+  catch(e){this.textContent='COPY FAILED';}
+  setTimeout(()=>this.textContent=old,1500);
+});
 document.getElementById('apiKeyForm').addEventListener('submit',async function(e){
   e.preventDefault();
   const form=e.currentTarget,button=document.getElementById('keySubmit'),box=document.getElementById('keyResult');
