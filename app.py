@@ -983,3 +983,7 @@ def fam_verify():
         save_json(PAID_FILE,PaidRecords)
 
     return jsonify({"status":"success","data":res,"dev":"@ROXXOP"}),200
+\n\n
+# Admin panel registration (kept separate from the public developer portal).
+from admin_panel import register_admin_panel
+register_admin_panel(app)
