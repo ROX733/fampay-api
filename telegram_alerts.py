@@ -81,6 +81,39 @@ def _new_link(api_key):
     return "https://t.me/" + username + "?start=" + token
 
 
+def issue_prelink():
+    token = secrets.token_urlsafe(24)
+    with _LOCK:
+        links = _read(LINKS_FILE)
+        now = int(time.time())
+        links = {k: v for k, v in links.items() if int(v.get("expires_at", 0)) > now}
+        links[token] = {"pending": True, "expires_at": now + 900}
+        _write(LINKS_FILE, links)
+    username = os.getenv("TELEGRAM_BOT_USERNAME", _BOT_USERNAME).strip().lstrip("@")
+    return token, "https://t.me/" + username + "?start=" + token
+
+
+def verified_prelink(token):
+    with _LOCK:
+        entry = _read(LINKS_FILE).get(str(token), {})
+        if (entry.get("pending") and entry.get("chat_id") and
+                int(entry.get("expires_at", 0)) > int(time.time())):
+            return str(entry["chat_id"])
+    return None
+
+
+def consume_prelink(token):
+    with _LOCK:
+        links = _read(LINKS_FILE)
+        entry = links.get(str(token), {})
+        if not (entry.get("pending") and entry.get("chat_id") and
+                int(entry.get("expires_at", 0)) > int(time.time())):
+            return None
+        links.pop(str(token), None)
+        _write(LINKS_FILE, links)
+        return str(entry["chat_id"])
+
+
 def _basic_admin_ok():
     auth = request.authorization
     username = os.getenv("ADMIN_USERNAME", "")
@@ -171,6 +204,16 @@ def register_telegram_alerts(app):
             app.logger.warning("Telegram alert hook failed: %s", exc)
         return response
 
+    @app.post("/telegram/prelink")
+    def telegram_prelink():
+        token, link = issue_prelink()
+        return jsonify({"ok": True, "token": token, "telegram_link": link, "expires_in": 900})
+
+    @app.post("/telegram/prelink/status")
+    def telegram_prelink_status():
+        body = request.get_json(silent=True) or {}
+        return jsonify({"ok": True, "verified": bool(verified_prelink(body.get("token", "")))})
+
     @app.post("/telegram/webhook")
     def telegram_webhook():
         expected = os.getenv("TELEGRAM_WEBHOOK_SECRET", "").strip()
@@ -189,7 +232,7 @@ def register_telegram_alerts(app):
             parts = text.split(maxsplit=1)
             token = parts[1].strip() if len(parts) > 1 else ""
             if not token:
-                _send(chat_id, "👋 Welcome to FamPay API Alerts!\n\nTo link your account, generate an API key in the FamPay API portal and open its Telegram linking link.")
+                _send(chat_id, "👋 Welcome to FamPay API Alerts!\n\nTo generate an API key, first open the FamPay API portal and select Verify Telegram.")
                 return jsonify({"ok": True})
             with _LOCK:
                 links = _read(LINKS_FILE)
@@ -198,6 +241,12 @@ def register_telegram_alerts(app):
                     links.pop(token, None)
                     _write(LINKS_FILE, links)
                     _send(chat_id, "⚠️ This linking link is invalid or expired. Generate a fresh API key link from the portal.")
+                    return jsonify({"ok": True})
+                if entry.get("pending"):
+                    entry["chat_id"] = str(chat_id)
+                    links[token] = entry
+                    _write(LINKS_FILE, links)
+                    _send(chat_id, "✅ <b>Telegram verified!</b>\\n\\nReturn to the FamPay API portal to generate your API key within 15 minutes.")
                     return jsonify({"ok": True})
                 api_key = str(entry.get("api_key", ""))
                 keys_path = os.path.join(BASE_DIR, "keys.json")
