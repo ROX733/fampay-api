@@ -123,6 +123,104 @@ def _basic_admin_ok():
                 hmac.compare_digest(auth.password or "", password))
 
 
+
+def _money(value):
+    try:
+        return "₹{:,.2f}".format(float(value))
+    except (TypeError, ValueError):
+        return "₹0.00"
+
+
+def _stats(api_keys=None):
+    keys = _read(os.path.join(BASE_DIR, "keys.json"))
+    orders = _read(os.path.join(BASE_DIR, "orders.json"))
+    paid = _read(os.path.join(BASE_DIR, "paid.json"))
+    now = int(time.time())
+    selected = [o for o in orders.values() if isinstance(o, dict) and
+                (api_keys is None or o.get("api_key") in api_keys)]
+    success = [o for o in selected if o.get("status") in ("paid", "success", "verified") or o.get("order_id") in paid]
+    expired = [o for o in selected if o not in success and
+               (o.get("status") == "expired" or (o.get("expires_at") and int(o["expires_at"]) <= now))]
+    pending = [o for o in selected if o not in success and o not in expired]
+    return {
+        "users": len(keys), "orders": len(selected),
+        "amount": sum(float(o.get("amount") or 0) for o in selected),
+        "received": sum(float(o.get("amount") or 0) for o in success),
+        "expired": len(expired), "success": len(success), "pending": len(pending)
+    }
+
+
+def _keyboard(rows):
+    return json.dumps({"inline_keyboard": [[{"text": label, "callback_data": value} for label, value in row] for row in rows]})
+
+
+def _dashboard(chat_id, admin=False):
+    keys = _read(os.path.join(BASE_DIR, "keys.json"))
+    if admin:
+        st = _stats()
+        msg = ("👑 <b>Hello Admin!</b>\n\n"
+               f"👥 Total Users: <b>{st['users']}</b>\n"
+               f"🧾 Total Created Orders: <b>{st['orders']}</b>\n"
+               f"💰 Total Amount: <b>{_money(st['amount'])}</b>\n"
+               f"⌛ Total Expired Orders: <b>{st['expired']}</b>\n"
+               f"✅ Total Success Orders: <b>{st['success']}</b>\n"
+               f"💵 Total Success Order Amount: <b>{_money(st['received'])}</b>\n"
+               f"⏳ Total Pending Orders: <b>{st['pending']}</b>")
+        rows = [[("🔎 Find User Details", "admin_users"), ("🔍 Find Orders", "admin_orders")],
+                [("⚡ Bot Speed", "bot_speed")], [("🔄 Refresh", "dashboard")]]
+    else:
+        matched = {k for k, v in keys.items() if isinstance(v, dict) and str(v.get("telegram_chat_id", "")) == str(chat_id)}
+        if not matched:
+            _send(chat_id, "👋 Welcome to FamPay API Alerts!\n\nVerify Telegram in the API portal first, then generate your API key.")
+            return
+        st = _stats(matched)
+        msg = ("📊 <b>Your FamPay Dashboard</b>\n\n"
+               f"🧾 Total Created Orders: <b>{st['orders']}</b>\n"
+               f"💰 Total Created Order Amount: <b>{_money(st['amount'])}</b>\n"
+               f"💵 Total Amount Received: <b>{_money(st['received'])}</b>\n"
+               f"⌛ Expired Orders: <b>{st['expired']}</b>\n"
+               f"✅ Success Orders: <b>{st['success']}</b>\n"
+               f"⏳ Pending Orders: <b>{st['pending']}</b>")
+        rows = [[("🔄 Refresh Dashboard", "dashboard")]]
+    _bot_call("sendMessage", {"chat_id": str(chat_id), "text": msg, "parse_mode": "HTML",
+                              "reply_markup": _keyboard(rows)})
+
+
+def _admin_lookup(chat_id, kind, query):
+    if str(chat_id) != os.getenv("TELEGRAM_ADMIN_CHAT_ID", "").strip():
+        return
+    keys = _read(os.path.join(BASE_DIR, "keys.json"))
+    orders = _read(os.path.join(BASE_DIR, "orders.json"))
+    query = query.strip().lower()
+    if not query:
+        _send(chat_id, "Usage: /user gmail-or-mobile or /order order_id")
+        return
+    if kind == "user":
+        matches = [(k, v) for k, v in keys.items() if isinstance(v, dict) and
+                   (query in str(v.get("gmail", "")).lower() or query == str(v.get("mobile", "")).lower())][:5]
+        if not matches:
+            _send(chat_id, "No matching user found.")
+            return
+        import html
+        for key, record in matches:
+            count = sum(1 for o in orders.values() if isinstance(o, dict) and o.get("api_key") == key)
+            _send(chat_id, "👤 <b>User Details</b>\n📧 " + html.escape(str(record.get("gmail", ""))) +
+                  "\n📱 " + html.escape(str(record.get("mobile", ""))) +
+                  "\n💳 UPI: " + html.escape(str(record.get("upi", ""))) +
+                  "\n🔗 Telegram: " + ("Linked" if record.get("telegram_chat_id") else "Not linked") +
+                  "\n🧾 Orders: " + str(count))
+    else:
+        import html
+        matches = [(oid, o) for oid, o in orders.items() if query in oid.lower() and isinstance(o, dict)][:5]
+        if not matches:
+            _send(chat_id, "No matching order found.")
+            return
+        for oid, o in matches:
+            _send(chat_id, "🧾 <b>Order Details</b>\nID: <code>" + html.escape(oid) +
+                  "</code>\nAmount: " + _money(o.get("amount")) +
+                  "\nStatus: " + html.escape(str(o.get("status", "pending"))) +
+                  "\nCreated: " + str(o.get("created_at", "—")))
+
 def register_telegram_alerts(app):
     @app.after_request
     def _telegram_event_alert(response):
@@ -222,11 +320,41 @@ def register_telegram_alerts(app):
             return jsonify({"ok": False, "error": "Unauthorized"}), 401
 
         update = request.get_json(silent=True) or {}
+        callback = update.get("callback_query") or {}
+        if callback:
+            callback_chat = ((callback.get("message") or {}).get("chat") or {}).get("id")
+            action = str(callback.get("data", ""))
+            admin_chat = os.getenv("TELEGRAM_ADMIN_CHAT_ID", "").strip()
+            is_admin = bool(admin_chat and str(callback_chat) == admin_chat and
+                            str((callback.get("from") or {}).get("id")) == admin_chat)
+            _bot_call("answerCallbackQuery", {"callback_query_id": callback.get("id", "")})
+            if callback_chat:
+                if action == "dashboard":
+                    _dashboard(callback_chat, is_admin)
+                elif action == "bot_speed" and is_admin:
+                    started = time.monotonic()
+                    _send(callback_chat, "⚡ Bot is online. Processing latency: {:.0f} ms".format((time.monotonic() - started) * 1000))
+                elif action == "admin_users" and is_admin:
+                    _send(callback_chat, "🔎 Find User Details\\nSend: /user example@gmail.com (or /user 9876543210)")
+                elif action == "admin_orders" and is_admin:
+                    _send(callback_chat, "🔍 Find Orders\\nSend: /order FAMPAY...")
+            return jsonify({"ok": True})
+
         message = update.get("message") or update.get("edited_message") or {}
         chat = message.get("chat") or {}
         chat_id = chat.get("id")
         text = str(message.get("text", "")).strip()
         if not chat_id:
+            return jsonify({"ok": True})
+        admin_chat = os.getenv("TELEGRAM_ADMIN_CHAT_ID", "").strip()
+        is_admin = bool(admin_chat and str(chat_id) == admin_chat)
+        if text.startswith("/user ") or text.startswith("/order "):
+            command, query = text.split(maxsplit=1)
+            if is_admin:
+                _admin_lookup(chat_id, "user" if command == "/user" else "order", query)
+            return jsonify({"ok": True})
+        if text in ("/dashboard", "/stats") or (text == "/start" and is_admin):
+            _dashboard(chat_id, is_admin)
             return jsonify({"ok": True})
         if text.startswith("/start"):
             parts = text.split(maxsplit=1)
@@ -278,6 +406,6 @@ def register_telegram_alerts(app):
         ok, error = _bot_call("setWebhook", {
             "url": base + "/telegram/webhook",
             "secret_token": secret,
-            "allowed_updates": json.dumps(["message"])
+            "allowed_updates": json.dumps(["message", "callback_query"])
         })
         return jsonify({"ok": ok, "message": "Webhook registered." if ok else error})
