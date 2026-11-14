@@ -189,6 +189,32 @@ body:before{content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;bac
 @keyframes markSpin{to{transform:rotate(360deg)}}
 @keyframes emojiPop{0%{transform:scale(1)}45%{transform:scale(1.22) rotate(-8deg)}75%{transform:scale(.94) rotate(5deg)}100%{transform:scale(1)}}
 
+
+/* V3: highly visible motion layer; scroll reveal above remains enabled */
+.motion-version{display:inline-flex;align-items:center;gap:9px;margin-top:15px;padding:9px 13px;border:1px solid #d7caff66;border-radius:999px;background:linear-gradient(100deg,#ffffff20,#bda7ff30,#ffffff12);color:#fff;font-size:10px;font-weight:900;letter-spacing:1.25px;box-shadow:0 0 0 1px #ffffff0c,0 8px 28px #a88aff30;animation:versionGlow 2.8s ease-in-out infinite}
+.motion-version b{padding:3px 7px;border-radius:7px;background:#fff;color:#5942c9;font-size:10px}
+.motion-version span{color:#baf8df;font-size:9px;letter-spacing:1px}
+.hero{isolation:isolate}
+.hero:before{width:360px;height:360px;right:-75px;top:-170px;background:radial-gradient(circle,#c6b3ff55 0%,#a78aff20 48%,transparent 72%);filter:blur(3px);animation:orbFloat 6s ease-in-out infinite alternate,orbGlow 3.8s ease-in-out infinite}
+.hero:after{width:270px;height:270px;right:18%;bottom:-195px;background:radial-gradient(circle,#ffb8ed38 0%,#d8aaff18 48%,transparent 72%);animation:orbFloat 8s ease-in-out infinite alternate-reverse}
+.hero-pill{transition:transform .25s,background .25s,border-color .25s;animation:pillBob 2.8s ease-in-out infinite}
+.hero-pill:hover{transform:translateY(-7px) scale(1.04);background:#ffffff25;border-color:#ffffff75}
+.stat-icon,.doc-icon,.feature-icon{will-change:transform;animation:emojiBounce 2.8s ease-in-out infinite}
+.stat:nth-child(2) .stat-icon,.feature:nth-child(2) .feature-icon,.doc-card:nth-of-type(2) .doc-icon{animation-delay:.35s}
+.stat:nth-child(3) .stat-icon,.feature:nth-child(3) .feature-icon{animation-delay:.7s}
+.doc-card:hover,.feature:hover,.info-card:hover,.stat:hover{transform:translateY(-7px) scale(1.012);box-shadow:0 26px 65px rgba(109,93,252,.19);border-color:#8d7cff88}
+.brand-mark{position:relative;overflow:hidden}
+.brand-mark:after{content:"";position:absolute;inset:-60%;background:linear-gradient(110deg,transparent 42%,#ffffffa8 50%,transparent 58%);transform:translateX(-100%);animation:markShine 4s ease-in-out infinite}
+.copy-base,.key-submit,.console-submit,.theme-btn,.copy-code,.key-copy{transition:transform .22s cubic-bezier(.2,.8,.2,1),filter .22s,box-shadow .22s}
+.copy-base:hover,.key-submit:hover,.console-submit:hover{transform:translateY(-3px) scale(1.015);box-shadow:0 13px 30px #765cff55}
+.reveal{will-change:opacity,transform}
+.reveal.is-visible{animation:revealSettle .65s cubic-bezier(.2,.8,.2,1) both}
+@keyframes versionGlow{0%,100%{box-shadow:0 0 0 1px #ffffff0c,0 8px 22px #a88aff24;filter:brightness(1)}50%{box-shadow:0 0 0 4px #ffffff0c,0 10px 34px #c5aaff70;filter:brightness(1.16)}}
+@keyframes orbGlow{0%,100%{opacity:.65}50%{opacity:1}}
+@keyframes emojiBounce{0%,100%{transform:translateY(0) rotate(0) scale(1)}30%{transform:translateY(-7px) rotate(-7deg) scale(1.08)}55%{transform:translateY(1px) rotate(4deg) scale(.98)}75%{transform:translateY(-3px) rotate(-3deg) scale(1.03)}}
+@keyframes markShine{0%,65%,100%{transform:translateX(-100%)}82%{transform:translateX(100%)}}
+@keyframes revealSettle{0%{filter:blur(2px)}100%{filter:blur(0)}}
+
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}.reveal{opacity:1;transform:none}}
 
 </style>
@@ -202,6 +228,7 @@ body:before{content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;bac
 <section class="hero">
   <div class="hero-inner">
     <div class="eyebrow"><span class="live-dot"></span> DEVELOPER PLATFORM</div>
+    <div class="motion-version">✨ MOTION UPDATE <b>V3</b> <span>LIVE UI</span></div>
     <h1>Payments made<br><span>simple & automatic.</span></h1>
     <p>Create UPI payment requests, generate hosted QR codes and verify incoming payments through your registered Gmail inbox — all through one straightforward API.</p>
     <div class="hero-pills"><span class="hero-pill">⚡ UPI QR generation</span><span class="hero-pill">🔐 Gmail IMAP verification</span><span class="hero-pill">🧩 Simple REST endpoints</span></div>
