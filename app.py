@@ -167,6 +167,28 @@ body:before{content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;bac
 @keyframes markPulse{0%,100%{box-shadow:0 8px 20px #6d5dfc44}50%{box-shadow:0 8px 28px #9b5bfa88}}
 @keyframes textShimmer{to{background-position:200% center}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
+
+/* Extra lively interactions: emoji motion, glow and tactile buttons */
+.live-dot{animation:livePulse 2s ease-in-out infinite}
+.stat-icon,.doc-icon,.feature-icon{transform-origin:50% 65%;animation:emojiFloat 3.6s ease-in-out infinite}
+.stat:nth-child(2) .stat-icon,.feature:nth-child(2) .feature-icon{animation-delay:.45s}
+.stat:nth-child(3) .stat-icon,.feature:nth-child(3) .feature-icon{animation-delay:.9s}
+.doc-card:nth-of-type(2) .doc-icon{animation:emojiWiggle 4.5s ease-in-out infinite}
+.hero-pill{animation:pillBob 4s ease-in-out infinite}
+.hero-pill:nth-child(2){animation-delay:.55s}.hero-pill:nth-child(3){animation-delay:1.1s}
+.brand:hover .brand-mark{animation:markSpin .65s ease}
+.theme-btn:active,.copy-base:active,.key-submit:active,.console-submit:active,.copy-code:active,.key-copy:active{transform:translateY(1px) scale(.97)}
+.key-submit,.console-submit,.copy-base{position:relative;overflow:hidden}
+.key-submit:before,.console-submit:before,.copy-base:before{content:"";position:absolute;inset:-80% auto -80% -35%;width:22%;transform:rotate(22deg);background:linear-gradient(90deg,transparent,#ffffff55,transparent);transition:left .65s ease}
+.key-submit:hover:before,.console-submit:hover:before,.copy-base:hover:before{left:120%}
+.feature:hover .feature-icon,.stat:hover .stat-icon,.doc-card:hover .doc-icon{animation:emojiPop .65s ease}
+@keyframes livePulse{0%,100%{box-shadow:0 0 0 3px #66e6b122;opacity:1}50%{box-shadow:0 0 0 8px #66e6b10a;opacity:.72}}
+@keyframes emojiFloat{0%,100%{transform:translateY(0) rotate(0)}35%{transform:translateY(-5px) rotate(-5deg)}70%{transform:translateY(-2px) rotate(4deg)}}
+@keyframes emojiWiggle{0%,85%,100%{transform:rotate(0)}88%{transform:rotate(-9deg)}92%{transform:rotate(8deg)}96%{transform:rotate(-4deg)}}
+@keyframes pillBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes markSpin{to{transform:rotate(360deg)}}
+@keyframes emojiPop{0%{transform:scale(1)}45%{transform:scale(1.22) rotate(-8deg)}75%{transform:scale(.94) rotate(5deg)}100%{transform:scale(1)}}
+
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}.reveal{opacity:1;transform:none}}
 
 </style>
