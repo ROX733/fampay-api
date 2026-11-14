@@ -477,7 +477,7 @@ def create_key():
             return error("gpass (Gmail App Password) is required")
         
         # Validate input format before attempting the Gmail connection.
-        if not re.fullmatch(r"[^\\s@]+@gmail\\.com", gmail, re.I):
+        if not re.fullmatch(r"[^\s@]+@gmail\.com", gmail, re.I):
             return error("Enter a valid @gmail.com address")
         if len(gpass) != 16:
             return error("Invalid Gmail App Password. Enter the 16-character Google App Password.")
