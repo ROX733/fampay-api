@@ -586,7 +586,7 @@ document.getElementById('apiKeyForm').addEventListener('submit',async function(e
     const result=await response.json();box.style.display='block';
     if(!response.ok||result.status!=='success'){box.className='key-result error';box.textContent=result.message||'Could not generate API key. Check your details.';return}
     box.className='key-result';
-    box.innerHTML='<b>✅ Success! '+escapeHtml(result.telegram_name||'Telegram User')+' Api Key Generated Successfully</b><div class="key-value" id="generatedKey"></div><button type="button" class="key-copy" id="copyGeneratedKey">COPY API KEY</button><p style="font-size:11px;margin-top:9px">Save this key securely. Telegram is already linked.</p>';
+    box.innerHTML='<b>✅ Success! '+String(result.telegram_name||'Telegram User').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))+' Api Key Generated Successfully</b><div class="key-value" id="generatedKey"></div><button type="button" class="key-copy" id="copyGeneratedKey">COPY API KEY</button><p style="font-size:11px;margin-top:9px">Save this key securely. Telegram is already linked.</p>';
     document.getElementById('generatedKey').textContent=result.api_key;
     telegramVerified=false;telegramToken='';keyButton.disabled=true;tgStatus.textContent='Verify Telegram for the next API key.';
     document.getElementById('copyGeneratedKey').addEventListener('click',async function(){try{await copyText(result.api_key);this.textContent='COPIED'}catch(e){this.textContent='COPY FAILED'}});
