@@ -264,6 +264,22 @@ html[data-theme=dark] .stat-icon,html[data-theme=dark] .doc-icon,html[data-theme
 
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}.reveal{opacity:1;transform:none}}
 
+
+/* V5 — Telegram-like animated emoji + high-contrast API response panels */
+.premium-emoji{font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif!important;font-weight:400!important;font-size:23px!important;line-height:1;filter:drop-shadow(0 5px 7px rgba(86,65,190,.24));animation:telegramEmojiFloat 2.1s cubic-bezier(.4,0,.2,1) infinite}
+.stat:nth-child(2) .premium-emoji,.feature:nth-child(2) .premium-emoji{animation-delay:.3s}
+.stat:nth-child(3) .premium-emoji,.feature:nth-child(3) .premium-emoji{animation-delay:.6s}
+.doc-card:nth-of-type(2) .premium-emoji{animation-delay:.45s}
+.doc-card:hover .premium-emoji,.feature:hover .premium-emoji,.stat:hover .premium-emoji{animation:telegramEmojiPop .55s cubic-bezier(.2,.8,.2,1)}
+@keyframes telegramEmojiFloat{0%,100%{transform:translateY(0) scale(1) rotate(0);filter:drop-shadow(0 4px 5px rgba(86,65,190,.18))}35%{transform:translateY(-6px) scale(1.12) rotate(-7deg);filter:drop-shadow(0 9px 9px rgba(86,65,190,.3))}68%{transform:translateY(1px) scale(.97) rotate(4deg)}}
+@keyframes telegramEmojiPop{0%{transform:scale(1)}45%{transform:scale(1.28) rotate(-10deg)}75%{transform:scale(.92) rotate(6deg)}100%{transform:scale(1)}}
+.codebox pre,.console-output pre{background:#000!important;color:#f4f4f4!important}
+.success-response .codebar{background:linear-gradient(100deg,#087b45,#0b9b5a)!important;color:#fff!important;border-bottom-color:#087b45!important}
+.success-response .codebar .copy-code{background:#ffffff24!important;color:#fff!important;border:1px solid #ffffff35}
+.console-output-head.is-success{background:linear-gradient(100deg,#087b45,#0b9b5a)!important;color:#fff!important}
+.console-output-head.is-error{background:#8f2534!important;color:#fff!important}
+@media(prefers-reduced-motion:reduce){.premium-emoji{animation:none!important}}
+
 </style>
 </head>
 <body>
@@ -287,15 +303,15 @@ html[data-theme=dark] .stat-icon,html[data-theme=dark] .doc-icon,html[data-theme
   <p class="base-help">This is the root address of your API. Add an endpoint path to it when making requests — for example, <code>/fam_create</code> or <code>/fam_verify</code>. The endpoint examples below show the complete live URL.</p>
 </section>
 <div class="stats">
-  <div class="stat"><span class="stat-icon" aria-hidden="true">₹</span><div><b>UPI payments</b><small>Dynamic QR requests</small></div></div>
-  <div class="stat"><span class="stat-icon" aria-hidden="true">@</span><div><b>Inbox matching</b><small>Gmail IMAP checks</small></div></div>
-  <div class="stat"><span class="stat-icon" aria-hidden="true">◇</span><div><b>Private API keys</b><small>Merchant-based access</small></div></div>
+  <div class="stat"><span class="stat-icon premium-emoji" aria-hidden="true">💸</span><div><b>UPI payments</b><small>Dynamic QR requests</small></div></div>
+  <div class="stat"><span class="stat-icon premium-emoji" aria-hidden="true">📩</span><div><b>Inbox matching</b><small>Gmail IMAP checks</small></div></div>
+  <div class="stat"><span class="stat-icon premium-emoji" aria-hidden="true">🔐</span><div><b>Private API keys</b><small>Merchant-based access</small></div></div>
 </div>
 <section id="documentation">
   <div class="section-kicker">API REFERENCE</div><h2 class="section-heading">Documentation</h2>
   <p class="section-intro">Use your API key with the endpoints below. All responses are returned in JSON format.</p>
   <article class="doc-card">
-    <div class="doc-head"><div class="doc-icon" aria-hidden="true">01</div><div><h3 class="doc-title">Generate QR Code</h3><div class="doc-sub">CREATE A PAYMENT ORDER</div></div></div>
+    <div class="doc-head"><div class="doc-icon premium-emoji" aria-hidden="true">💳</div><div><h3 class="doc-title">Generate QR Code</h3><div class="doc-sub">CREATE A PAYMENT ORDER</div></div></div>
     <p class="doc-desc">Create a new UPI payment request. The API returns a unique order ID and a QR image hosted on this API server. Each QR request expires after five minutes.</p>
     <div class="endpoint"><span class="method">GET</span><code id="createEndpoint">/fam_create?amount=AMOUNT&amp;api_key=YOUR_API_KEY</code></div>
     <div class="param-title">REQUEST PARAMETERS</div>
@@ -303,7 +319,7 @@ html[data-theme=dark] .stat-icon,html[data-theme=dark] .doc-icon,html[data-theme
       <div class="param-row"><code>amount</code><span class="required">Required</span><span>Payment amount in INR (1–100000).</span></div>
       <div class="param-row"><code>api_key</code><span class="required">Required</span><span>Your API key generated from this page.</span></div>
     </div>
-    <div class="codebox"><div class="codebar"><span>SUCCESS RESPONSE</span><button class="copy-code" type="button" onclick="copyCode(this)">COPY</button></div><pre>{
+    <div class="codebox success-response"><div class="codebar"><span>SUCCESS RESPONSE</span><button class="copy-code" type="button" onclick="copyCode(this)">COPY</button></div><pre>{
   "status": "success",
   "data": {
     "order_id": "FAMPAY2026111400401024D72AA0",
@@ -317,7 +333,7 @@ html[data-theme=dark] .stat-icon,html[data-theme=dark] .doc-icon,html[data-theme
 }</pre></div>
   </article>
   <article class="doc-card">
-    <div class="doc-head"><div class="doc-icon" aria-hidden="true">02</div><div><h3 class="doc-title">Verify Payment Status</h3><div class="doc-sub">CHECK PAYMENT COMPLETION</div></div></div>
+    <div class="doc-head"><div class="doc-icon premium-emoji" aria-hidden="true">✨</div><div><h3 class="doc-title">Verify Payment Status</h3><div class="doc-sub">CHECK PAYMENT COMPLETION</div></div></div>
     <p class="doc-desc">Check whether an order has been paid. Submit the order ID returned by the QR generation endpoint.</p>
     <div class="endpoint"><span class="method">GET</span><code id="verifyEndpoint">/fam_verify?order_id=ORDER_ID&amp;api_key=YOUR_API_KEY</code></div>
     <div class="param-title">REQUEST PARAMETERS</div>
@@ -325,7 +341,7 @@ html[data-theme=dark] .stat-icon,html[data-theme=dark] .doc-icon,html[data-theme
       <div class="param-row"><code>order_id</code><span class="required">Required</span><span>Order ID received from <code>/fam_create</code>.</span></div>
       <div class="param-row"><code>api_key</code><span class="required">Required</span><span>Your personal API key.</span></div>
     </div>
-    <div class="codebox"><div class="codebar"><span>FIRST SUCCESSFUL VERIFY RESPONSE</span><button class="copy-code" type="button" onclick="copyCode(this)">COPY</button></div><pre>{
+    <div class="codebox success-response"><div class="codebar"><span>FIRST SUCCESSFUL VERIFY RESPONSE</span><button class="copy-code" type="button" onclick="copyCode(this)">COPY</button></div><pre>{
   "status": "success",
   "data": {
     "order_id": "FAMPAY2026111400401024D72AA0",
@@ -359,9 +375,9 @@ html[data-theme=dark] .stat-icon,html[data-theme=dark] .doc-icon,html[data-theme
   <div class="section-kicker">BUILT FOR DEVELOPERS</div><h2 class="section-heading">Why Choose FamPay API?</h2>
   <p class="section-intro">A compact workflow for creating payment requests and checking incoming transactions.</p>
   <div class="features">
-    <div class="feature"><div class="feature-icon" aria-hidden="true">↗</div><div><h3>Simple Integration</h3><p>Clear GET endpoints and JSON responses make it easy to connect your application.</p></div></div>
-    <div class="feature"><div class="feature-icon" aria-hidden="true">⌑</div><div><h3>Merchant API Keys</h3><p>Each merchant gets a personal key after Gmail IMAP credentials are verified.</p></div></div>
-    <div class="feature"><div class="feature-icon" aria-hidden="true">▣</div><div><h3>Hosted QR Codes</h3><p>QR images are generated and served directly from your API domain.</p></div></div>
+    <div class="feature"><div class="feature-icon premium-emoji" aria-hidden="true">⚡</div><div><h3>Simple Integration</h3><p>Clear GET endpoints and JSON responses make it easy to connect your application.</p></div></div>
+    <div class="feature"><div class="feature-icon premium-emoji" aria-hidden="true">🔑</div><div><h3>Merchant API Keys</h3><p>Each merchant gets a personal key after Gmail IMAP credentials are verified.</p></div></div>
+    <div class="feature"><div class="feature-icon premium-emoji" aria-hidden="true">📱</div><div><h3>Hosted QR Codes</h3><p>QR images are generated and served directly from your API domain.</p></div></div>
   </div>
 </section>
 <section class="key-card" id="generate-api-key">
@@ -459,10 +475,12 @@ verifyTestForm.addEventListener('submit',async function(e){
     const result=await response.json();
     verifyTestJson.textContent=JSON.stringify(result,null,2);
     document.getElementById('verifyTestStatus').textContent='API RESPONSE · HTTP '+response.status;
+    const responseHead=document.querySelector('.console-output-head');responseHead.classList.toggle('is-success',result.status==='success');responseHead.classList.toggle('is-error',result.status!=='success');
     verifyTestOutput.style.display='block';
   }catch(err){
     verifyTestJson.textContent=JSON.stringify({status:'error',message:'Network error. Please try again.'},null,2);
     document.getElementById('verifyTestStatus').textContent='REQUEST FAILED';
+    document.querySelector('.console-output-head').classList.remove('is-success');document.querySelector('.console-output-head').classList.add('is-error');
     verifyTestOutput.style.display='block';
   }finally{
     verifyTestButton.disabled=false;verifyTestButton.textContent='▶ Run Payment Verification';
