@@ -46,6 +46,41 @@ def _bot_call(method, payload):
         return False, str(exc)[:180]
 
 
+def _safe(value):
+    return html.escape(str(value or "—"))
+
+def prelink_identity(token):
+    entry = _read(LINKS_FILE).get(str(token), {})
+    if entry.get("pending") and entry.get("chat_id") and int(entry.get("expires_at", 0)) > int(time.time()):
+        return {"telegram_id": str(entry["chat_id"]), "telegram_name": entry.get("name") or "Telegram User",
+                "telegram_username": entry.get("username") or ""}
+    return None
+
+def _mask_password(password):
+    compact = str(password or "").replace(" ", "")
+    return _safe(compact[:8] + "****")
+
+def notify_key_created(api_key, gmail, upi, mobile, password, identity):
+    name = _safe(identity.get("telegram_name", "Telegram User"))
+    username = _safe("@" + identity["telegram_username"] if identity.get("telegram_username") else "Not set")
+    fields = ("📧 Gmail :- <code>" + _safe(gmail) + "</code>\n"
+              "💳 UPI :- <code>" + _safe(upi) + "</code>\n"
+              "📱 Mobile :- <code>" + _safe(mobile) + "</code>\n"
+              "🔒 App Password :- <code>" + _mask_password(password) + "</code>\n"
+              "🔑 Your Api Key :- <code>" + _safe(api_key) + "</code>")
+    user_chat = str(identity.get("telegram_id", ""))
+    admin_chat = os.getenv("TELEGRAM_ADMIN_CHAT_ID", "").strip()
+    if user_chat:
+        _send(user_chat, "✅ <b>Success! " + name + " Api Key Generated Successfully</b>\n\n" + fields)
+    if admin_chat:
+        dashboard = os.getenv("ADMIN_DASHBOARD_URL", "").strip() or os.getenv("PUBLIC_BASE_URL", "").strip().rstrip("/") + "/admin"
+        msg = ("🆕 <b>Hey Admin, New User Api Key Generated</b>\n\n"
+               "Telegram Username :- " + username + "\n"
+               "Telegram Account Name :- " + name + "\n"
+               "Telegram Id :- <code>" + _safe(user_chat) + "</code>\n" + fields +
+               "\n\nTo Get This user App Password Login to Admin Dashboard - " + _safe(dashboard))
+        _send(admin_chat, msg)
+
 def _send(chat_id, message):
     if not chat_id:
         return False
@@ -111,7 +146,7 @@ def consume_prelink(token):
             return None
         links.pop(str(token), None)
         _write(LINKS_FILE, links)
-        return str(entry["chat_id"])
+        return {"telegram_id": str(entry["chat_id"]), "telegram_name": entry.get("name") or "Telegram User", "telegram_username": entry.get("username") or ""}
 
 
 def _basic_admin_ok():
@@ -239,12 +274,6 @@ def register_telegram_alerts(app):
                 response.set_data(json.dumps(data, ensure_ascii=False))
                 response.headers["Content-Type"] = "application/json"
 
-                _notify(api_key,
-                    "🆕 <b>New API Key Generated</b>\n"
-                    "📧 Gmail: <code>" + str(data.get("gmail", "—")) + "</code>\n"
-                    "💳 UPI: <code>" + str(data.get("upi", "—")) + "</code>\n"
-                    "📱 Mobile: <code>" + str(data.get("mobile", "—")) + "</code>\n"
-                    "🔑 API key created successfully.")
                 return response
 
             api_key = str(request.args.get("api_key") or request.headers.get("X-API-Key") or "")
@@ -379,9 +408,12 @@ def register_telegram_alerts(app):
                     return jsonify({"ok": True})
                 if entry.get("pending"):
                     entry["chat_id"] = str(chat_id)
+                    sender = message.get("from") or {}
+                    entry["name"] = " ".join(filter(None, [sender.get("first_name", ""), sender.get("last_name", "")])).strip() or "Telegram User"
+                    entry["username"] = str(sender.get("username") or "")
                     links[token] = entry
                     _write(LINKS_FILE, links)
-                    _send(chat_id, "✅ <b>Telegram verified!</b>\\n\\nReturn to the FamPay API portal to generate your API key within 15 minutes.")
+                    _send(chat_id, "✅ <b>Telegram Account Connected Successfully to " + _safe(entry.get("name")) + "</b>\n\nReturn to the website to generate your API key.")
                     return jsonify({"ok": True})
                 api_key = str(entry.get("api_key", ""))
                 keys_path = os.path.join(BASE_DIR, "keys.json")
