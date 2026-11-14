@@ -1027,7 +1027,8 @@ def fam_verify():
         save_json(PAID_FILE,PaidRecords)
 
     return jsonify({"status":"success","data":res,"dev":"@ROXXOP"}),200
-\n\n
+
+
 # Admin and Telegram integrations.
 from admin_panel import register_admin_panel
 from telegram_alerts import register_telegram_alerts
