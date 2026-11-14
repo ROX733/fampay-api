@@ -48,240 +48,242 @@ BotKeys=load_json(KEYS_FILE)
 Orders=load_json(ORDERS_FILE)
 PaidRecords=load_json(PAID_FILE)
 
-HTML = """<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>FamPay API | Payment Documentation</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+HTML = """<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#6d5dfc">
+<title>FamPay API — Developer Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',sans-serif;background:linear-gradient(180deg,#7C6CF6 0%,#8B7CF8 35%,#A78BFA 100%);min-height:100vh;padding:16px 14px 90px;color:#111827}
-.container{max-width:680px;margin:0 auto}
-.card{background:#fff;border-radius:20px;padding:22px 18px;margin-bottom:16px;box-shadow:0 12px 32px rgba(37,20,97,0.14);animation:slideUp .6s ease forwards;opacity:0}
-.card:nth-child(1){animation-delay:.1s}.card:nth-child(2){animation-delay:.2s}.card:nth-child(3){animation-delay:.3s}.card:nth-child(4){animation-delay:.4s}.card:nth-child(5){animation-delay:.5s}
-.center{text-align:center}
-@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
-@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
-@keyframes glow{0%,100%{box-shadow:0 8px 18px rgba(124,108,246,.35)}50%{box-shadow:0 12px 28px rgba(124,108,246,.55)}}
-.logo-wrap{width:58px;height:58px;background:linear-gradient(135deg,#7C6CF6,#5B4FE8);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;animation:float 3s ease-in-out infinite,glow 2s ease-in-out infinite;font-size:28px}
-.badge-top{display:inline-block;background:#EDE9FF;color:#6D5DF6;font-size:10px;font-weight:800;letter-spacing:1.2px;padding:5px 12px;border-radius:20px;margin-bottom:10px;animation:pulse 2s infinite}
-.h1{font-size:26px;font-weight:800;line-height:1.1}.h1 span{color:#7C6CF6}
-.btn-dark{display:inline-flex;background:#111827;color:#fff;border:none;padding:12px 24px;border-radius:999px;font-weight:700;font-size:13px;margin-top:16px;cursor:pointer;align-items:center;gap:8px;text-decoration:none;transition:all .3s;animation:pulse 2.5s infinite}
-.btn-dark:hover{transform:scale(1.05);background:#000}
-.sub{color:#6B7280;font-size:13px;line-height:1.6;margin-top:12px}
-.stats{display:flex;justify-content:space-between;margin-top:20px;border-top:1px solid #F3F4F6;padding-top:16px}
-.stat{flex:1;text-align:center}.stat-icon{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;font-size:16px;animation:bounce 2s infinite}
-.stat:nth-child(2) .stat-icon{animation-delay:.2s}.stat:nth-child(3) .stat-icon{animation-delay:.4s}
-.stat b{display:block;font-size:12px;color:#111827}
-.sec-head{display:flex;align-items:center;gap:12px;margin-bottom:8px}
-.sec-num{width:36px;height:36px;background:#EDE9FF;color:#7C6CF6;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;animation:pulse 2s infinite}
-.sec-title{font-size:16px;font-weight:800}.sec-type{font-size:10px;font-weight:700;letter-spacing:.6px;color:#6B7280;margin-top:2px}
-.sec-desc{font-size:13px;color:#4B5563;line-height:1.6;margin:8px 0 14px}
-.endpoint{background:#F5F7FF;border:1px solid #DDE3FF;border-radius:12px;padding:10px 12px;display:flex;gap:10px;align-items:flex-start;overflow:auto;margin:12px 0}
-.method{background:#7C6CF6;color:#fff;font-size:11px;font-weight:800;padding:4px 8px;border-radius:6px;flex-shrink:0}
-.endpoint code{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#4338CA;word-break:break-all;line-height:1.5}
-.req-title{font-size:11px;font-weight:800;letter-spacing:.8px;color:#111827;margin:18px 0 10px;display:flex;align-items:center;gap:6px}
-.table{border:1px solid #F3F4F6;border-radius:12px;overflow:hidden}
-.t-head{display:grid;grid-template-columns:90px 90px 1fr;background:#F9FAFB;padding:9px 12px;font-size:10px;font-weight:800;color:#6B7280;letter-spacing:.6px}
-.t-row{display:grid;grid-template-columns:90px 90px 1fr;padding:12px 12px;font-size:12px;border-top:1px solid #F3F4F6;align-items:center;gap:8px}
-.t-row b{font-family:'JetBrains Mono',monospace;font-size:12px}
-.tag-req{background:#FEE2E2;color:#DC2626;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;display:inline-block}
-.code-wrap{position:relative;background:#0F172A;border-radius:14px;margin-top:12px;overflow:hidden;border:1px solid #1E293B}
-.code-head{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:#111C34;border-bottom:1px solid #1E293B}
-.code-label{font-size:11px;font-weight:700;color:#94A3B8}
-.copy{background:#7C6CF6;color:#fff;border:none;padding:6px 12px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;transition:.2s}
-.code-wrap pre{margin:0;padding:14px;color:#E2E8F0;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;overflow:auto;white-space:pre-wrap;word-break:break-word}
-.pro-tip{background:#FFFBEB;border:1px solid #FDE68A;border-radius:12px;padding:11px 12px;font-size:11.5px;color:#92400E;line-height:1.5;margin-top:14px;display:flex;gap:8px;animation:bounce 3s infinite}
-
-.key-form{display:grid;gap:11px;margin-top:14px}
-.key-form label{display:block;font-size:11px;font-weight:800;color:#374151;margin-bottom:6px}
-.key-form input{width:100%;border:1px solid #E5E7EB;border-radius:11px;padding:12px 13px;font:13px Inter,sans-serif;outline:none;background:#FAFAFF}
-.key-form input:focus{border-color:#7C6CF6;box-shadow:0 0 0 3px rgba(124,108,246,.12)}
-.key-submit{width:100%;border:0;border-radius:12px;background:linear-gradient(135deg,#7C6CF6,#5B4FE8);color:#fff;padding:13px;font-size:13px;font-weight:800;cursor:pointer;margin-top:4px}
+:root{--bg:#f6f7fc;--surface:#fff;--surface2:#f2f3fa;--text:#17172b;--muted:#70728a;--line:#e7e8f1;--purple:#6d5dfc;--purple2:#8c62ff;--code:#111326;--shadow:0 18px 55px rgba(38,32,92,.08)}
+html[data-theme=dark]{--bg:#0d1020;--surface:#171b30;--surface2:#202540;--text:#f2f2ff;--muted:#a5a8c0;--line:#303651;--purple:#a79aff;--purple2:#846cff;--code:#090c19;--shadow:0 18px 55px rgba(0,0,0,.22);color-scheme:dark}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;transition:background .25s,color .25s}
+a{color:inherit;text-decoration:none}.shell{max-width:1060px;margin:auto;padding:0 22px}
+.topbar{height:76px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand{display:flex;align-items:center;gap:11px;font-family:'Space Grotesk';font-weight:700;font-size:18px;letter-spacing:-.5px}
+.brand-mark{height:38px;width:38px;border-radius:13px;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,#6d5dfc,#a66bff);box-shadow:0 8px 20px #6d5dfc44;font-size:20px}
+.nav-actions{display:flex;align-items:center;gap:10px}.nav-link{font-size:13px;font-weight:700;color:var(--muted);padding:10px 12px}
+.theme-btn{border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:12px;padding:10px 13px;font:700 12px 'DM Sans';cursor:pointer}
+.hero{position:relative;overflow:hidden;border-radius:30px;padding:54px 48px 40px;background:linear-gradient(120deg,#17152f 0%,#30236b 48%,#714dcb 100%);color:#fff;box-shadow:0 24px 65px #34217a30}
+.hero:before,.hero:after{content:"";position:absolute;border-radius:50%;filter:blur(1px);pointer-events:none}
+.hero:before{width:320px;height:320px;right:-80px;top:-160px;background:#b7a4ff26}
+.hero:after{width:220px;height:220px;right:160px;bottom:-170px;background:#e2b5ff20}
+.hero-inner{position:relative;z-index:1;max-width:700px}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;border:1px solid #ffffff35;background:#ffffff12;border-radius:999px;padding:7px 12px;font-size:10px;font-weight:800;letter-spacing:1.5px;color:#ddd6ff}
+.live-dot{width:7px;height:7px;background:#66e6b1;border-radius:50%;box-shadow:0 0 0 4px #66e6b122}
+.hero h1{font:700 clamp(34px,6vw,54px)/1.04 'Space Grotesk';letter-spacing:-2px;margin:22px 0 14px}
+.hero h1 span{background:linear-gradient(90deg,#c9baff,#ffcbf2);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{max-width:590px;color:#d3cfee;font-size:15px;line-height:1.75;margin:0}
+.hero-pills{display:flex;flex-wrap:wrap;gap:9px;margin-top:24px}.hero-pill{border:1px solid #ffffff30;background:#ffffff12;padding:8px 11px;border-radius:10px;color:#f1edff;font-size:11px;font-weight:700}
+.base-card{margin-top:20px;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:20px 22px;box-shadow:var(--shadow)}
+.base-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.base-title{font-size:12px;font-weight:800;letter-spacing:1px;color:var(--muted)}
+.base-url-row{display:flex;align-items:center;gap:12px}
+.base-url{font:500 13px 'JetBrains Mono';word-break:break-all;flex:1;color:var(--text)}
+.copy-base{flex-shrink:0;border:0;background:var(--purple);color:#fff;padding:10px 14px;border-radius:11px;font:700 11px 'DM Sans';cursor:pointer}
+.base-help{font-size:11px;color:var(--muted);line-height:1.6;margin-top:11px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0 34px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;align-items:center;gap:12px}
+.stat-icon{width:38px;height:38px;display:grid;place-items:center;border-radius:12px;background:var(--surface2);font-size:18px}
+.stat b{display:block;font-size:12px}.stat small{display:block;color:var(--muted);font-size:10px;margin-top:3px}
+.section-kicker{font-size:10px;letter-spacing:1.8px;font-weight:800;color:var(--purple);margin:30px 0 8px}
+.section-heading{font:700 26px 'Space Grotesk';letter-spacing:-.7px;margin:0 0 7px}
+.section-intro{font-size:13px;color:var(--muted);line-height:1.7;margin:0 0 18px}
+.doc-card{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:24px;margin:16px 0;box-shadow:var(--shadow)}
+.doc-head{display:flex;align-items:center;gap:13px;margin-bottom:10px}
+.doc-icon{width:43px;height:43px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,#eeeaff,#e8e3ff);color:#5b4ce0;font-size:20px}
+html[data-theme=dark] .doc-icon{background:#302b54;color:#c7bbff}
+.doc-title{font:700 18px 'Space Grotesk';margin:0}.doc-sub{font-size:10px;color:var(--muted);font-weight:800;letter-spacing:1px;margin-top:3px}
+.doc-desc{font-size:13px;color:var(--muted);line-height:1.7;margin:8px 0 15px}
+.endpoint{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:12px;margin:12px 0;min-width:0}
+.method{background:#e5e0ff;color:#5746d8;border-radius:7px;padding:5px 8px;font-size:10px;font-weight:900}
+html[data-theme=dark] .method{background:#39315f;color:#d1c8ff}
+.endpoint code{font:11px 'JetBrains Mono';word-break:break-all;line-height:1.6}
+.param-title{font-size:10px;font-weight:900;letter-spacing:1.2px;margin:18px 0 9px}
+.param-table{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.param-row{display:grid;grid-template-columns:100px 90px 1fr;gap:10px;padding:12px;font-size:11px;border-top:1px solid var(--line);align-items:center}
+.param-row:first-child{border-top:0;background:var(--surface2);font-size:9px;font-weight:900;color:var(--muted);letter-spacing:1px}
+.param-row code{font:600 11px 'JetBrains Mono'}
+.required{font-size:9px;font-weight:800;color:#d64e67}
+.codebox{background:var(--code);border:1px solid #282b43;border-radius:15px;overflow:hidden;margin-top:14px}
+.codebar{display:flex;align-items:center;justify-content:space-between;padding:10px 13px;border-bottom:1px solid #292c44;color:#a9aec8;font-size:10px;font-weight:800}
+.copy-code{border:0;background:#34305d;color:#e7e1ff;border-radius:8px;padding:7px 10px;font-size:10px;font-weight:800;cursor:pointer}
+.codebox pre{margin:0;padding:15px;color:#e4e6f3;font:11px/1.8 'JetBrains Mono';white-space:pre-wrap;overflow:auto;word-break:break-word}
+.tip{margin-top:14px;background:#fff8e8;color:#87601b;border:1px solid #f4dfae;border-radius:12px;padding:12px;font-size:11px;line-height:1.6}
+html[data-theme=dark] .tip{background:#352c1d;color:#f5d994;border-color:#65502c}
+.features{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;margin-top:18px}
+.feature{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:20px}
+.feature-icon{font-size:23px;margin-bottom:13px}.feature h3{font:700 14px 'Space Grotesk';margin:0 0 7px}.feature p{font-size:11px;line-height:1.65;color:var(--muted);margin:0}
+.key-card{background:linear-gradient(145deg,var(--surface),var(--surface2));border:1px solid var(--line);border-radius:24px;padding:25px;box-shadow:var(--shadow);margin:18px 0 30px}
+.key-form{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}
+.field label{display:block;font-size:11px;font-weight:800;margin-bottom:7px}
+.field input{width:100%;border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:11px;padding:13px;font:13px 'DM Sans';outline:none}
+.field input:focus{border-color:var(--purple);box-shadow:0 0 0 3px #7968ff22}
+.key-submit{grid-column:1/-1;border:0;border-radius:12px;padding:14px;background:linear-gradient(100deg,#6d5dfc,#9b5bfa);color:white;font:800 13px 'DM Sans';cursor:pointer}
 .key-submit:disabled{opacity:.6;cursor:wait}
-.key-result{display:none;margin-top:14px;border:1px solid #BBF7D0;background:#F0FDF4;border-radius:12px;padding:13px}
-.key-result.error{border-color:#FECACA;background:#FEF2F2;color:#991B1B}
-.key-value{font-family:'JetBrains Mono',monospace;font-size:11px;word-break:break-all;background:#fff;border:1px solid #D1D5DB;border-radius:8px;padding:10px;margin-top:8px;color:#111827}
-.key-copy{border:0;background:#111827;color:#fff;padding:8px 12px;border-radius:8px;font-size:11px;font-weight:700;margin-top:8px;cursor:pointer}
-.features{display:grid;gap:12px;margin-top:14px}
-.feat{background:#fff;border:1px solid #F3F4F6;border-radius:16px;padding:18px;text-align:center;transition:transform .3s}
-.feat:hover{transform:translateY(-3px)}
-.feat-icon{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:22px;animation:float 3s ease-in-out infinite}
-.feat:nth-child(2) .feat-icon{animation-delay:.5s}.feat:nth-child(3) .feat-icon{animation-delay:1s}
-.feat h4{font-size:13px;font-weight:800}.feat p{font-size:11px;color:#6B7280;margin-top:4px;line-height:1.5}
-.footer{margin-top:20px;text-align:center}.dot{display:inline-block;width:6px;height:6px;background:#7C6CF6;border-radius:50%;margin-right:6px;animation:pulse 1.5s infinite}
-.footer-links{display:flex;justify-content:center;gap:14px;margin-top:10px;font-size:11px;color:#111827;font-weight:600}
-
-.theme-toggle-wrap{max-width:680px;margin:0 auto 12px;display:flex;justify-content:flex-end}
-.theme-toggle{border:1px solid rgba(255,255,255,.45);background:rgba(255,255,255,.18);backdrop-filter:blur(12px);color:#fff;padding:10px 15px;border-radius:999px;font:700 12px Inter,sans-serif;cursor:pointer}
-.base-panel{margin-top:16px;padding:14px;border:1px solid #DDD6FE;background:#F7F5FF;border-radius:14px;text-align:left}
-.base-label{font-size:10px;font-weight:800;letter-spacing:1px;color:#6D5DF6;margin-bottom:7px}
-.base-value-row{display:flex;align-items:center;gap:8px}
-.base-value{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:#312E81;word-break:break-all;flex:1}
-.base-copy{border:0;background:#6D5DF6;color:#fff;padding:8px 11px;border-radius:8px;font-size:10px;font-weight:800;cursor:pointer;white-space:nowrap}
-body[data-theme="dark"]{background:radial-gradient(circle at top left,#30245E 0%,#111827 55%,#080D18 100%);color:#E5E7EB}
-body[data-theme="dark"] .card,body[data-theme="dark"] .feat{background:#172033;color:#E5E7EB;border:1px solid #29364D;box-shadow:0 14px 34px rgba(0,0,0,.25)}
-body[data-theme="dark"] .sub,body[data-theme="dark"] .sec-desc,body[data-theme="dark"] .feat p{color:#AAB6C8}
-body[data-theme="dark"] .stat b,body[data-theme="dark"] .req-title,body[data-theme="dark"] .sec-title,body[data-theme="dark"] .key-form label{color:#E5E7EB}
-body[data-theme="dark"] .stats,body[data-theme="dark"] .t-row{border-color:#334155}
-body[data-theme="dark"] .endpoint,body[data-theme="dark"] .base-panel{background:#202B42;border-color:#3B4B68}
-body[data-theme="dark"] .endpoint code,body[data-theme="dark"] .base-value{color:#C4B5FD}
-body[data-theme="dark"] .t-head{background:#202B42;color:#AAB6C8}
-body[data-theme="dark"] .t-row{color:#D5DCE8}
-body[data-theme="dark"] .table{border-color:#334155}
-body[data-theme="dark"] .key-form input{background:#101827;border-color:#3B4B68;color:#F8FAFC}
-body[data-theme="dark"] .key-value{background:#101827;border-color:#3B4B68;color:#F8FAFC}
-body[data-theme="dark"] .footer>div{background:#172033!important;color:#E5E7EB}
-body[data-theme="dark"] .footer-links{color:#E5E7EB}
-body[data-theme="dark"] .pro-tip{background:#3A2F17;border-color:#806323;color:#FDE68A}
-body[data-theme="dark"] .key-result{background:#123322;color:#BBF7D0}
-body[data-theme="dark"] .key-result.error{background:#3A1D24;color:#FECACA}
-@media(max-width:420px){.base-value-row{align-items:stretch;flex-direction:column}.base-copy{width:100%}}
-</style></head><body data-theme="light"><div class="theme-toggle-wrap"><button class="theme-toggle" id="themeToggle" type="button">🌙 Dark mode</button></div><div class="container">
-<div class="card center" style="padding:30px 18px">
-<div class="logo-wrap">⚡</div>
-<div class="badge-top">FamPay DevPortal</div>
-<div style="font-size:10px;font-weight:800;letter-spacing:1.2px;color:#6B7280;margin-top:-6px;margin-bottom:6px">AUTOMATED UPI SOLUTIONS</div>
-<h1 class="h1">FamPay <span>DevPortal</span></h1>
-<a href="https://t.me/FampayPaymentApi_Bot" target="_blank" class="btn-dark">🤖 GET API KEY - Telegram Bot</a>
-<p class="sub">Merchant-wise automated payment verification with Gmail matching. Click above to get your FREE API key via Telegram Bot.</p>
-</div>
-<div class="card center">
-<div style="width:54px;height:54px;background:#EEF2FF;border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:26px;animation:float 2.5s infinite">📄</div>
-<h2 style="font-size:20px;font-weight:800">API <span style="color:#7C6CF6">Documentation</span></h2>
-<p class="sub">Integrate UPI payment collection and automatic Gmail-based payment verification with a simple REST API.</p>
-<div class="base-panel"><div class="base-label">🌐 YOUR API BASE URL</div><div class="base-value-row"><span class="base-value" id="baseUrlValue">https://fampay-api-7msf.onrender.com</span><button class="base-copy" id="copyBaseUrl" type="button">📋 COPY URL</button></div><p style="font-size:11px;color:#6B7280;line-height:1.5;margin-top:8px">Use this base URL before any endpoint path shown below. It automatically matches the domain currently serving this documentation.</p></div>
+.key-result{display:none;margin-top:15px;padding:14px;border-radius:12px;background:#e9fff2;color:#12643b;font-size:12px;overflow-wrap:anywhere}
+.key-result.error{background:#fff0f0;color:#9f2525}
+.key-value{font:11px 'JetBrains Mono';padding:11px;background:#fff;border:1px solid #d8e5dc;border-radius:9px;margin-top:9px;color:#18251d}
+.key-copy{border:0;background:#202039;color:white;border-radius:8px;padding:9px 12px;font-weight:800;font-size:10px;margin-top:9px}
+.key-note{font-size:11px;color:var(--muted);line-height:1.65;margin-top:13px}
+.footer{border-top:1px solid var(--line);padding:22px 0 32px;text-align:center;color:var(--muted);font-size:11px}
+@media(max-width:650px){.shell{padding:0 14px}.topbar{height:66px}.nav-link{display:none}.hero{padding:38px 23px 30px;border-radius:23px}.hero h1{letter-spacing:-1.3px}.stats{gap:8px}.stat{padding:11px;display:block}.stat-icon{margin-bottom:8px}.stat b{font-size:10px}.stat small{font-size:9px}.doc-card{padding:18px}.param-row{grid-template-columns:75px 72px 1fr;padding:10px 8px;font-size:10px}.features{grid-template-columns:1fr}.feature{display:flex;gap:13px;align-items:flex-start}.feature-icon{margin:0}.key-form{grid-template-columns:1fr}.key-submit{grid-column:auto}.base-url-row{align-items:flex-start;flex-direction:column}.copy-base{width:100%}}
+</style>
+</head>
+<body>
+<div class="shell">
+<header class="topbar">
+  <a class="brand" href="/"><span class="brand-mark">ϟ</span><span>FamPay <span style="color:var(--purple)">API</span></span></a>
+  <nav class="nav-actions"><a class="nav-link" href="#documentation">Documentation</a><a class="nav-link" href="#generate-api-key">Create API Key</a><button class="theme-btn" id="themeToggle" type="button">🌙 Dark mode</button></nav>
+</header>
+<section class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow"><span class="live-dot"></span> DEVELOPER PLATFORM</div>
+    <h1>Payments made<br><span>simple & automatic.</span></h1>
+    <p>Create UPI payment requests, generate hosted QR codes and verify incoming payments through your registered Gmail inbox — all through one straightforward API.</p>
+    <div class="hero-pills"><span class="hero-pill">⚡ UPI QR generation</span><span class="hero-pill">🔐 Gmail IMAP verification</span><span class="hero-pill">🧩 Simple REST endpoints</span></div>
+  </div>
+</section>
+<section class="base-card">
+  <div class="base-top"><div class="base-title">YOUR API BASE URL</div><span style="font-size:10px;color:var(--muted)">LIVE DOMAIN</span></div>
+  <div class="base-url-row"><code class="base-url" id="baseUrlValue">Loading…</code><button class="copy-base" id="copyBaseUrl" type="button">Copy Base URL</button></div>
+  <p class="base-help">This is the root address of your API. Add an endpoint path to it when making requests — for example, <code>/fam_create</code> or <code>/fam_verify</code>. The endpoint examples below show the complete live URL.</p>
+</section>
 <div class="stats">
-<div class="stat"><div class="stat-icon" style="background:#ECFDF5">✅</div><b>99.9% Uptime</b></div>
-<div class="stat"><div class="stat-icon" style="background:#FEF3C7">⚡</div><b>&lt;200ms Response</b></div>
-<div class="stat"><div class="stat-icon" style="background:#DBEAFE">🔒</div><b>SSL Encrypted</b></div>
-</div></div>
-
-
-<div class="card">
-<div class="sec-head"><div class="sec-num">1</div><div><div class="sec-title">Generate QR Code</div><div class="sec-type">GET Payment Request</div></div></div>
-<div class="sec-desc">Generate a dynamic UPI QR code for receiving instant payments with automatic verification.</div>
-<div class="endpoint"><span class="method">GET</span><code>/fam_create?amount=AMOUNT&api_key=YOUR_API_KEY</code></div>
-<div class="req-title">📋 REQUEST PARAMETERS</div>
-<div class="table"><div class="t-head"><span>PARAMETER</span><span>TYPE</span><span>DESCRIPTION</span></div>
-<div class="t-row"><b>amount</b><span class="tag-req">Required</span><span>Payment Amount (1 - 100000). Example: 1</span></div>
-<div class="t-row"><b>api_key</b><span class="tag-req">Required</span><span>Your personal API key generated from the form below</span></div></div>
-<div class="code-wrap"><div class="code-head"><span class="code-label">✅ SUCCESS RESPONSE</span><button class="copy" onclick="copyCode(this)">📋 COPY</button></div>
-<pre>{
+  <div class="stat"><span class="stat-icon">📲</span><div><b>UPI payments</b><small>Dynamic QR requests</small></div></div>
+  <div class="stat"><span class="stat-icon">📩</span><div><b>Inbox matching</b><small>Gmail IMAP checks</small></div></div>
+  <div class="stat"><span class="stat-icon">🛡️</span><div><b>Private API keys</b><small>Merchant-based access</small></div></div>
+</div>
+<section id="documentation">
+  <div class="section-kicker">API REFERENCE</div><h2 class="section-heading">Documentation</h2>
+  <p class="section-intro">Use your API key with the endpoints below. All responses are returned in JSON format.</p>
+  <article class="doc-card">
+    <div class="doc-head"><div class="doc-icon">▦</div><div><h3 class="doc-title">Generate QR Code</h3><div class="doc-sub">CREATE A PAYMENT ORDER</div></div></div>
+    <p class="doc-desc">Create a new UPI payment request. The API returns a unique order ID and a QR image hosted on this API server. Each QR request expires after five minutes.</p>
+    <div class="endpoint"><span class="method">GET</span><code id="createEndpoint">/fam_create?amount=AMOUNT&amp;api_key=YOUR_API_KEY</code></div>
+    <div class="param-title">REQUEST PARAMETERS</div>
+    <div class="param-table"><div class="param-row"><span>PARAMETER</span><span>TYPE</span><span>DESCRIPTION</span></div>
+      <div class="param-row"><code>amount</code><span class="required">Required</span><span>Payment amount in INR (1–100000).</span></div>
+      <div class="param-row"><code>api_key</code><span class="required">Required</span><span>Your API key generated from this page.</span></div>
+    </div>
+    <div class="codebox"><div class="codebar"><span>SUCCESS RESPONSE</span><button class="copy-code" type="button" onclick="copyCode(this)">COPY</button></div><pre>{
   "status": "success",
   "data": {
-    "order_id": "FAMPAY2026042300401024D72AA0",
-    "qr_url": "https://fampay-api-7msf.onrender.com/qr_codes/FAMPAY2026042300401024D72AA0.png",
-    "upi_id": "papai69@fam",
+    "order_id": "FAMPAY2026111400401024D72AA0",
+    "qr_url": "https://your-api-domain/qr_codes/ORDER_ID.png",
+    "upi_id": "merchant@upi",
     "amount": "10",
-    "created_at_ist": "21-10-2026 23:00:41",
-    "expires_at_ist": "21-10-2026 23:05:41"
+    "created_at_ist": "14-11-2026 18:00:00",
+    "expires_at_ist": "14-11-2026 18:05:00"
   },
   "dev": "@ROXXOP"
 }</pre></div>
-</div>
-
-<div class="card">
-<div class="sec-head"><div class="sec-num">2</div><div><div class="sec-title">Verify Payment Status</div><div class="sec-type">Check Transaction Completion</div></div></div>
-<div class="sec-desc">Verify if payment has been successfully received using the unique Order ID.</div>
-<div class="endpoint"><span class="method">GET</span><code>/fam_verify?order_id=ORDER_ID&api_key=YOUR_API_KEY</code></div>
-<div class="req-title">📋 REQUEST PARAMETERS</div>
-<div class="table"><div class="t-head"><span>PARAMETER</span><span>TYPE</span><span>DESCRIPTION</span></div>
-<div class="t-row"><b>order_id</b><span class="tag-req">Required</span><span>Order ID from QR generation</span></div>
-<div class="t-row"><b>api_key</b><span class="tag-req">Required</span><span>Your personal API key</span></div></div>
-<div class="code-wrap"><div class="code-head"><span class="code-label">✅ SUCCESS RESPONSE</span><button class="copy" onclick="copyCode(this)">📋 COPY</button></div>
-<pre>{
+  </article>
+  <article class="doc-card">
+    <div class="doc-head"><div class="doc-icon">✓</div><div><h3 class="doc-title">Verify Payment Status</h3><div class="doc-sub">CHECK PAYMENT COMPLETION</div></div></div>
+    <p class="doc-desc">Check whether an order has been paid. Submit the order ID returned by the QR generation endpoint.</p>
+    <div class="endpoint"><span class="method">GET</span><code id="verifyEndpoint">/fam_verify?order_id=ORDER_ID&amp;api_key=YOUR_API_KEY</code></div>
+    <div class="param-title">REQUEST PARAMETERS</div>
+    <div class="param-table"><div class="param-row"><span>PARAMETER</span><span>TYPE</span><span>DESCRIPTION</span></div>
+      <div class="param-row"><code>order_id</code><span class="required">Required</span><span>Order ID received from <code>/fam_create</code>.</span></div>
+      <div class="param-row"><code>api_key</code><span class="required">Required</span><span>Your personal API key.</span></div>
+    </div>
+    <div class="codebox"><div class="codebar"><span>SUCCESS RESPONSE</span><button class="copy-code" type="button" onclick="copyCode(this)">COPY</button></div><pre>{
   "status": "success",
   "data": {
-    "order_id": "FAMPAY2026042300401024D72AA0",
-    "transaction_id": "FMPIB5255631361",
+    "order_id": "FAMPAY2026111400401024D72AA0",
+    "transaction_id": "UPI123456789012",
     "amount": 10,
     "utr": "301268197755",
-    "sender_name": "Anuj Patel",
-    "payment_time_ist": "23-04-2026 00:42:12"
+    "sender_name": "Customer",
+    "payment_time_ist": "14-11-2026 18:02:12"
   },
   "dev": "@ROXXOP"
 }</pre></div>
-<div class="code-wrap"><div class="code-head"><span class="code-label">❌ FAILED RESPONSE</span><button class="copy" onclick="copyCode(this)">📋 COPY</button></div>
-<pre>{
+    <div class="codebox"><div class="codebar"><span>PENDING / NOT PAID RESPONSE</span><button class="copy-code" type="button" onclick="copyCode(this)">COPY</button></div><pre>{
   "status": "error",
   "message": "Transaction failed - Payment not received",
-  "order_id": "FAMPAY2026042300401024D72AA0",
+  "order_id": "FAMPAY2026111400401024D72AA0",
   "dev": "@ROXXOP"
 }</pre></div>
-<div class="pro-tip">💡 <b>Quick Tips:</b> QR codes expire after 5 minutes. Save order_id for verification. Keep API key confidential.</div>
+    <div class="tip">💡 QR requests expire after five minutes. Save the <b>order_id</b> and use it to check payment status. Keep your API key private.</div>
+  </article>
+</section>
+<section>
+  <div class="section-kicker">BUILT FOR DEVELOPERS</div><h2 class="section-heading">Why Choose FamPay API?</h2>
+  <p class="section-intro">A compact workflow for creating payment requests and checking incoming transactions.</p>
+  <div class="features">
+    <div class="feature"><div class="feature-icon">⚡</div><div><h3>Simple Integration</h3><p>Clear GET endpoints and JSON responses make it easy to connect your application.</p></div></div>
+    <div class="feature"><div class="feature-icon">🔒</div><div><h3>Merchant API Keys</h3><p>Each merchant gets a personal key after Gmail IMAP credentials are verified.</p></div></div>
+    <div class="feature"><div class="feature-icon">📱</div><div><h3>Hosted QR Codes</h3><p>QR images are generated and served directly from your API domain.</p></div></div>
+  </div>
+</section>
+<section class="key-card" id="generate-api-key">
+  <div class="section-kicker">GET STARTED</div><h2 class="section-heading">Generate your API Key</h2>
+  <p class="section-intro">Verify your Gmail App Password and register your UPI details to create a personal API key.</p>
+  <form class="key-form" id="apiKeyForm">
+    <div class="field"><label for="keyGmail">Gmail Address</label><input id="keyGmail" name="gmail" type="email" placeholder="yourname@gmail.com" autocomplete="email" required></div>
+    <div class="field"><label for="keyGpass">Gmail App Password</label><input id="keyGpass" name="gpass" type="password" placeholder="16-character App Password" autocomplete="new-password" required></div>
+    <div class="field"><label for="keyUpi">UPI ID</label><input id="keyUpi" name="upi" type="text" placeholder="yourname@bank" required></div>
+    <div class="field"><label for="keyMobile">Mobile Number</label><input id="keyMobile" name="mobile" type="tel" inputmode="numeric" placeholder="10-digit mobile number" required></div>
+    <button class="key-submit" id="keySubmit" type="submit">🔐 Verify Gmail &amp; Generate API Key</button>
+  </form>
+  <p class="key-note">🔒 Enter a Google App Password, not your normal Gmail password. Your Gmail credentials are checked through IMAP before an API key is created. Use this page over HTTPS.</p>
+  <div class="key-result" id="keyResult" role="status" aria-live="polite"></div>
+</section>
+<footer class="footer">FamPay API Developer Portal · API v2.0 · <span id="footerBaseUrl"></span></footer>
 </div>
-
-<div class="card">
-<h3 style="font-size:16px;font-weight:800;text-align:center;margin-bottom:14px">⭐ Why Choose FamPay API?</h3>
-<div class="features">
-<div class="feat"><div class="feat-icon" style="background:#EDE9FF">🚀</div><h4>Lightning Fast</h4><p>Instant payment verification with &lt;200ms response time</p></div>
-<div class="feat"><div class="feat-icon" style="background:#D1FAE5">🛡️</div><h4>Bank-Grade Security</h4><p>End-to-end encryption with SSL/TLS protocols</p></div>
-<div class="feat"><div class="feat-icon" style="background:#EDE9FF">💻</div><h4>Developer Friendly</h4><p>Simple REST API with comprehensive documentation</p></div>
-</div></div>
-<div class="card" id="generate-api-key">
-<div class="sec-head"><div class="sec-num">🔑</div><div><div class="sec-title">Generate API Key</div><div class="sec-type">CREATE YOUR MERCHANT KEY</div></div></div>
-<div class="sec-desc">Enter your Gmail details and payment UPI information to create your own API key.</div>
-<form class="key-form" id="apiKeyForm">
-  <div><label for="keyGmail">Gmail Address</label><input id="keyGmail" name="gmail" type="email" placeholder="yourname@gmail.com" autocomplete="email" required></div>
-  <div><label for="keyGpass">Gmail App Password</label><input id="keyGpass" name="gpass" type="password" placeholder="Enter 16-character App Password" autocomplete="new-password" required></div>
-  <div><label for="keyUpi">UPI ID (required)</label><input id="keyUpi" name="upi" type="text" placeholder="yourupi@bank" required></div>
-  <div><label for="keyMobile">Mobile Number (required)</label><input id="keyMobile" name="mobile" type="tel" inputmode="numeric" placeholder="10-digit mobile number" required></div>
-  <button class="key-submit" id="keySubmit" type="submit">🔐 Generate API Key</button>
-</form>
-<div class="pro-tip">🔒 Use a Google App Password, not your normal Gmail password. Your details will be submitted to this API server over HTTPS when the site is served securely.</div>
-<div class="key-result" id="keyResult" role="status" aria-live="polite"></div>
-</div>
-<div class="footer"><div style="background:#fff;border-radius:20px;padding:16px">
-<div style="font-size:10px;font-weight:800;letter-spacing:1.2px;color:#6B7280"><span class="dot"></span>OFFICIAL API INFRASTRUCTURE - <span id="footerBaseUrl">https://fampay-api-7msf.onrender.com</span></div>
-<div class="footer-links"><span>🔷 API v2.0</span><span>● 24/7 Active</span><span>🌐 Global Access</span></div>
-<div style="margin-top:12px"><a href="https://t.me/FampayPaymentApi_Bot" style="background:#229ED9;color:#fff;padding:8px 16px;border-radius:20px;text-decoration:none;font-size:12px;font-weight:700">💬 Get API Key via Bot</a> <a href="https://t.me/FampayPaymentApi_Bot" style="background:#111827;color:#fff;padding:8px 16px;border-radius:20px;text-decoration:none;font-size:12px;font-weight:700">🤖 @FamPayPaymentApi_Bot</a></div>
-</div></div></div>
 <script>
-
-const themeToggle=document.getElementById('themeToggle');
-const savedTheme=localStorage.getItem('fampay-theme')||'light';
-document.body.dataset.theme=savedTheme;
-themeToggle.textContent=savedTheme==='dark'?'☀️ Light mode':'🌙 Dark mode';
-themeToggle.addEventListener('click',function(){
-  const next=document.body.dataset.theme==='dark'?'light':'dark';
-  document.body.dataset.theme=next;
-  localStorage.setItem('fampay-theme',next);
-  themeToggle.textContent=next==='dark'?'☀️ Light mode':'🌙 Dark mode';
-});
-const liveBaseUrl=window.location.origin;
-document.getElementById('baseUrlValue').textContent=liveBaseUrl;
-document.getElementById('footerBaseUrl').textContent=liveBaseUrl;
+const root=document.documentElement;
+const themeButton=document.getElementById('themeToggle');
+function setTheme(theme){root.dataset.theme=theme;localStorage.setItem('fampay-theme',theme);themeButton.textContent=theme==='dark'?'☀️ Light mode':'🌙 Dark mode'}
+setTheme(localStorage.getItem('fampay-theme')||'light');
+themeButton.addEventListener('click',()=>setTheme(root.dataset.theme==='dark'?'light':'dark'));
+const baseUrl=window.location.origin;
+document.getElementById('baseUrlValue').textContent=baseUrl;
+document.getElementById('footerBaseUrl').textContent=baseUrl;
+document.getElementById('createEndpoint').textContent=baseUrl+'/fam_create?amount=AMOUNT&api_key=YOUR_API_KEY';
+document.getElementById('verifyEndpoint').textContent=baseUrl+'/fam_verify?order_id=ORDER_ID&api_key=YOUR_API_KEY';
+async function copyText(value){
+  if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(value);return}
+  const field=document.createElement('textarea');field.value=value;field.style.position='fixed';field.style.opacity='0';document.body.appendChild(field);field.focus();field.select();
+  const ok=document.execCommand('copy');field.remove();if(!ok)throw new Error('Copy unavailable');
+}
 document.getElementById('copyBaseUrl').addEventListener('click',async function(){
-  await navigator.clipboard.writeText(liveBaseUrl);
-  this.textContent='✅ COPIED';
-  setTimeout(()=>this.textContent='📋 COPY URL',1500);
+  const button=this;const old=button.textContent;
+  try{await copyText(baseUrl);button.textContent='✓ Copied';}
+  catch(e){button.textContent='Select URL above';}
+  setTimeout(()=>button.textContent=old,1800);
 });
+async function copyCode(button){
+  const text=button.closest('.codebox').querySelector('pre').innerText;
+  const old=button.textContent;
+  try{await copyText(text);button.textContent='COPIED';}
+  catch(e){button.textContent='COPY FAILED';}
+  setTimeout(()=>button.textContent=old,1500);
+}
 document.getElementById('apiKeyForm').addEventListener('submit',async function(e){
   e.preventDefault();
-  const form=e.currentTarget,btn=document.getElementById('keySubmit'),box=document.getElementById('keyResult');
+  const form=e.currentTarget,button=document.getElementById('keySubmit'),box=document.getElementById('keyResult');
   const data=Object.fromEntries(new FormData(form).entries());
-  if(!data.upi.trim()||!data.mobile.trim()){box.className='key-result error';box.style.display='block';box.textContent='Please enter both your UPI ID and mobile number.';return;}
-  btn.disabled=true;btn.textContent='⏳ Generating...';box.style.display='none';
+  if(!data.upi.trim()||!data.mobile.trim()){box.className='key-result error';box.style.display='block';box.textContent='Please enter both UPI ID and mobile number.';return}
+  button.disabled=true;button.textContent='⏳ Verifying Gmail…';box.style.display='none';
   try{
-    const response=await fetch('/create_key',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});    const result=await response.json();
-    box.style.display='block';
-    if(!response.ok||result.status!=='success'){
-      box.className='key-result error';box.textContent=result.message||'Could not generate API key. Please check your details.';return;
-    }
+    const response=await fetch('/create_key',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    const result=await response.json();box.style.display='block';
+    if(!response.ok||result.status!=='success'){box.className='key-result error';box.textContent=result.message||'Could not generate API key. Check your details.';return}
     box.className='key-result';
-    box.innerHTML='<b>✅ API Key Generated Successfully</b><div class="key-value" id="generatedKey"></div><button type="button" class="key-copy" id="copyGeneratedKey">📋 COPY API KEY</button><p style="font-size:11px;color:#166534;margin-top:9px">Save this key securely. It will not be shown again on this page.</p>';
+    box.innerHTML='<b>✓ API key created successfully</b><div class="key-value" id="generatedKey"></div><button type="button" class="key-copy" id="copyGeneratedKey">COPY API KEY</button><p style="font-size:11px;margin-top:9px">Save this key securely. It will not be shown again on this page.</p>';
     document.getElementById('generatedKey').textContent=result.api_key;
-    document.getElementById('copyGeneratedKey').addEventListener('click',async function(){
-      await navigator.clipboard.writeText(result.api_key);this.textContent='✅ COPIED';
-    });
+    document.getElementById('copyGeneratedKey').addEventListener('click',async function(){try{await copyText(result.api_key);this.textContent='COPIED'}catch(e){this.textContent='COPY FAILED'}});
     form.reset();
-  }catch(err){box.className='key-result error';box.style.display='block';box.textContent='Network error. Please try again.';}
-  finally{btn.disabled=false;btn.textContent='🔐 Generate API Key';}
+  }catch(err){box.className='key-result error';box.style.display='block';box.textContent='Network error. Please try again.'}
+  finally{button.disabled=false;button.textContent='🔐 Verify Gmail & Generate API Key'}
 });
-function copyCode(btn){const pre=btn.closest('.code-wrap').querySelector('pre');navigator.clipboard.writeText(pre.innerText);const old=btn.innerHTML;btn.innerHTML='✅ COPIED';btn.style.background='#10B981';setTimeout(()=>{btn.innerHTML=old;btn.style.background='#7C6CF6'},1500);}
 </script>
-</body></html>
-"""
+</body></html>"""
 
 def error(m,s=400):
     return jsonify({"status":"error","message":m,"dev":"@ROXXOP"}),s
@@ -357,8 +359,7 @@ def find_amount(text):
         if m:
             try:
                 v=amount_value(m.group(1))
-                if v and v > 0 and v <= 100000:
-                    return v
+                if v and v > 0 and v <= 100000:                    return v
             except:
                 continue
     return None
@@ -537,8 +538,7 @@ def create_key():
                     return error("Gmail login succeeded, but IMAP could not open the inbox. Check that IMAP access is enabled.")
         except imaplib.IMAP4.error:
             return error("Gmail IMAP authentication failed. Check the Gmail address and 16-character App Password, and make sure 2-Step Verification and IMAP access are enabled.")
-        except (OSError, TimeoutError) as e:
-            return error("Could not connect to Gmail IMAP. Please try again later.")
+        except (OSError, TimeoutError) as e:            return error("Could not connect to Gmail IMAP. Please try again later.")
         except Exception:
             return error("Gmail IMAP verification failed. Please check your credentials and try again.")
 
@@ -718,12 +718,3 @@ def fam_verify():
         return jsonify({"status":"error","message":"Transaction failed - Payment not received","order_id":oid,"dev":"@ROXXOP"})
     res,msg=check_gmail_payment(keys[api_key],order)
     if not res:
-        return jsonify({"status":"error","message":"Transaction failed - Payment not received","order_id":oid,"dev":"@ROXXOP"})
-    enhanced={"order_id":res.get("order_id",oid),"transaction_id":res.get("transaction_id",res.get("utr","")),"amount":res.get("amount",order.get("amount")),"utr":res.get("utr",res.get("transaction_id","")),"sender_name":res.get("sender_name","Customer"),"payment_time_ist":res.get("payment_time_ist",res.get("payment_time",""))}
-    with LOCK:
-        PaidRecords[oid]=enhanced
-        save_json(PAID_FILE,PaidRecords)
-    return jsonify({"status":"success","data":enhanced,"dev":"@ROXXOP"})
-
-if __name__=="__main__":
-    app.run(host="0.0.0.0",port=int(os.getenv("PORT","5000")))
