@@ -541,8 +541,10 @@ document.getElementById('apiKeyForm').addEventListener('submit',async function(e
     const result=await response.json();box.style.display='block';
     if(!response.ok||result.status!=='success'){box.className='key-result error';box.textContent=result.message||'Could not generate API key. Check your details.';return}
     box.className='key-result';
-    box.innerHTML='<b>✓ API key created successfully</b><div class="key-value" id="generatedKey"></div><button type="button" class="key-copy" id="copyGeneratedKey">COPY API KEY</button><p style="font-size:11px;margin-top:9px">Save this key securely. It will not be shown again on this page.</p>';
+    box.innerHTML='<b>✓ API key created successfully</b><div class="key-value" id="generatedKey"></div><button type="button" class="key-copy" id="copyGeneratedKey">COPY API KEY</button><p style="font-size:11px;margin-top:9px">Save this key securely. It will not be shown again on this page.</p><p style="margin-top:14px"><a id="telegramLinkButton" target="_blank" rel="noopener" style="display:inline-block;background:#229ED9;color:#fff;padding:11px 14px;border-radius:10px;font-weight:800;text-decoration:none">✈️ Connect Telegram Alerts</a></p><small>Link your Telegram account within 24 hours to receive personal alerts.</small>';
     document.getElementById('generatedKey').textContent=result.api_key;
+    const telegramLinkButton=document.getElementById('telegramLinkButton');
+    if(result.telegram_link){telegramLinkButton.href=result.telegram_link;}else{telegramLinkButton.style.display='none';}
     document.getElementById('copyGeneratedKey').addEventListener('click',async function(){try{await copyText(result.api_key);this.textContent='COPIED'}catch(e){this.textContent='COPY FAILED'}});
     form.reset();
   }catch(err){box.className='key-result error';box.style.display='block';box.textContent='Network error. Please try again.'}
@@ -1026,6 +1028,8 @@ def fam_verify():
 
     return jsonify({"status":"success","data":res,"dev":"@ROXXOP"}),200
 \n\n
-# Admin panel registration (kept separate from the public developer portal).
+# Admin and Telegram integrations.
 from admin_panel import register_admin_panel
+from telegram_alerts import register_telegram_alerts
 register_admin_panel(app)
+register_telegram_alerts(app)
