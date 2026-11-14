@@ -853,7 +853,7 @@ def create_key():
         # Generate an API key only after Gmail IMAP verification succeeds.
         keys = get_all_keys()
         while True:
-            api_key = "FAM_" + secrets.token_hex(20).upper() + secrets.token_hex(10).lower()
+            api_key = "FAM_" + secrets.token_hex(16).upper()
             if api_key not in keys:
                 break
 
