@@ -9,6 +9,7 @@ from flask import Flask, request, jsonify, render_template_string, send_file
 import qrcode
 from qrcode.constants import ERROR_CORRECT_H
 from PIL import ImageDraw, ImageFont
+from cryptography.fernet import Fernet
 
 app = Flask(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -18,6 +19,30 @@ PAID_FILE = os.path.join(BASE_DIR, "paid.json")
 ORDER_EXPIRY = 300
 IMAP_HOST = "imap.gmail.com"
 LOCK = RLock()
+
+def _fernet():
+    key = os.getenv("FERNET_KEY", "").strip()
+    if not key:
+        return None
+    try:
+        return Fernet(key.encode("utf-8"))
+    except Exception as exc:
+        raise RuntimeError("FERNET_KEY is invalid; generate a Fernet key and set it in Render.") from exc
+
+def encrypt_gmail_password(value):
+    cipher = _fernet()
+    if cipher is None:
+        raise RuntimeError("FERNET_KEY is not configured.")
+    return "enc:" + cipher.encrypt(str(value).encode("utf-8")).decode("ascii")
+
+def decrypt_gmail_password(record):
+    value = str(record.get("gpass", "")).strip()
+    if value.startswith("enc:"):
+        cipher = _fernet()
+        if cipher is None:
+            raise RuntimeError("FERNET_KEY is required to decrypt stored Gmail credentials.")
+        return cipher.decrypt(value[4:].encode("ascii")).decode("utf-8")
+    return value  # Legacy plaintext records are migrated when FERNET_KEY is configured.
 
 def load_json(p):
     try:
@@ -47,6 +72,19 @@ def get_all_keys():
 BotKeys=load_json(KEYS_FILE)
 Orders=load_json(ORDERS_FILE)
 PaidRecords=load_json(PAID_FILE)
+# Migrate legacy plaintext Gmail App Passwords to encrypted-at-rest values.
+try:
+    _cipher = _fernet()
+    if _cipher:
+        _changed = False
+        for _record in BotKeys.values():
+            if isinstance(_record, dict) and _record.get("gpass") and not str(_record.get("gpass")).startswith("enc:"):
+                _record["gpass"] = encrypt_gmail_password(_record["gpass"])
+                _changed = True
+        if _changed:
+            save_json(KEYS_FILE, BotKeys)
+except Exception as _migration_error:
+    print(f"Gmail credential migration warning: {_migration_error}")
 
 HTML = """<!doctype html>
 <html lang="en" data-theme="light">
@@ -595,7 +633,7 @@ def find_amount(text):
 
 def check_gmail_payment(record,order):
     gmail=str(record.get("gmail","")).strip()
-    gpass=str(record.get("gpass","")).replace(" ","").strip()
+    gpass=decrypt_gmail_password(record).replace(" ","").strip()
     try:
         ctx=ssl.create_default_context()
         # FIX 1: Use correct IMAP host - imap.gmail.com
@@ -750,6 +788,10 @@ def create_key():
         if not gpass:
             return error("gpass (Gmail App Password) is required")
         
+        # New Gmail App Passwords must be encrypted at rest.
+        if not os.getenv("FERNET_KEY", "").strip():
+            return jsonify({"status":"error","message":"Server security is not configured. Please contact the administrator."}),503
+
         # Validate input format before attempting the Gmail connection.
         if not re.fullmatch(r"[^\s@]+@gmail\.com", gmail, re.I):
             return error("Enter a valid @gmail.com address")
@@ -783,7 +825,7 @@ def create_key():
             latest = get_all_keys()
             latest[api_key] = {
                 "gmail": gmail,
-                "gpass": gpass,
+                "gpass": encrypt_gmail_password(gpass),
                 "mobile": mobile,
                 "upi": upi,
                 "created_at": datetime.now(timezone.utc).isoformat(),
