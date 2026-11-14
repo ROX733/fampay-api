@@ -110,7 +110,33 @@ body{font-family:'Inter',sans-serif;background:linear-gradient(180deg,#7C6CF6 0%
 .feat h4{font-size:13px;font-weight:800}.feat p{font-size:11px;color:#6B7280;margin-top:4px;line-height:1.5}
 .footer{margin-top:20px;text-align:center}.dot{display:inline-block;width:6px;height:6px;background:#7C6CF6;border-radius:50%;margin-right:6px;animation:pulse 1.5s infinite}
 .footer-links{display:flex;justify-content:center;gap:14px;margin-top:10px;font-size:11px;color:#111827;font-weight:600}
-</style></head><body><div class="container">
+
+.theme-toggle-wrap{max-width:680px;margin:0 auto 12px;display:flex;justify-content:flex-end}
+.theme-toggle{border:1px solid rgba(255,255,255,.45);background:rgba(255,255,255,.18);backdrop-filter:blur(12px);color:#fff;padding:10px 15px;border-radius:999px;font:700 12px Inter,sans-serif;cursor:pointer}
+.base-panel{margin-top:16px;padding:14px;border:1px solid #DDD6FE;background:#F7F5FF;border-radius:14px;text-align:left}
+.base-label{font-size:10px;font-weight:800;letter-spacing:1px;color:#6D5DF6;margin-bottom:7px}
+.base-value-row{display:flex;align-items:center;gap:8px}
+.base-value{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:#312E81;word-break:break-all;flex:1}
+.base-copy{border:0;background:#6D5DF6;color:#fff;padding:8px 11px;border-radius:8px;font-size:10px;font-weight:800;cursor:pointer;white-space:nowrap}
+body[data-theme="dark"]{background:radial-gradient(circle at top left,#30245E 0%,#111827 55%,#080D18 100%);color:#E5E7EB}
+body[data-theme="dark"] .card,body[data-theme="dark"] .feat{background:#172033;color:#E5E7EB;border:1px solid #29364D;box-shadow:0 14px 34px rgba(0,0,0,.25)}
+body[data-theme="dark"] .sub,body[data-theme="dark"] .sec-desc,body[data-theme="dark"] .feat p{color:#AAB6C8}
+body[data-theme="dark"] .stat b,body[data-theme="dark"] .req-title,body[data-theme="dark"] .sec-title,body[data-theme="dark"] .key-form label{color:#E5E7EB}
+body[data-theme="dark"] .stats,body[data-theme="dark"] .t-row{border-color:#334155}
+body[data-theme="dark"] .endpoint,body[data-theme="dark"] .base-panel{background:#202B42;border-color:#3B4B68}
+body[data-theme="dark"] .endpoint code,body[data-theme="dark"] .base-value{color:#C4B5FD}
+body[data-theme="dark"] .t-head{background:#202B42;color:#AAB6C8}
+body[data-theme="dark"] .t-row{color:#D5DCE8}
+body[data-theme="dark"] .table{border-color:#334155}
+body[data-theme="dark"] .key-form input{background:#101827;border-color:#3B4B68;color:#F8FAFC}
+body[data-theme="dark"] .key-value{background:#101827;border-color:#3B4B68;color:#F8FAFC}
+body[data-theme="dark"] .footer>div{background:#172033!important;color:#E5E7EB}
+body[data-theme="dark"] .footer-links{color:#E5E7EB}
+body[data-theme="dark"] .pro-tip{background:#3A2F17;border-color:#806323;color:#FDE68A}
+body[data-theme="dark"] .key-result{background:#123322;color:#BBF7D0}
+body[data-theme="dark"] .key-result.error{background:#3A1D24;color:#FECACA}
+@media(max-width:420px){.base-value-row{align-items:stretch;flex-direction:column}.base-copy{width:100%}}
+</style></head><body data-theme="light"><div class="theme-toggle-wrap"><button class="theme-toggle" id="themeToggle" type="button">🌙 Dark mode</button></div><div class="container">
 <div class="card center" style="padding:30px 18px">
 <div class="logo-wrap">⚡</div>
 <div class="badge-top">FamPay DevPortal</div>
@@ -122,7 +148,8 @@ body{font-family:'Inter',sans-serif;background:linear-gradient(180deg,#7C6CF6 0%
 <div class="card center">
 <div style="width:54px;height:54px;background:#EEF2FF;border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:26px;animation:float 2.5s infinite">📄</div>
 <h2 style="font-size:20px;font-weight:800">API <span style="color:#7C6CF6">Documentation</span></h2>
-<p class="sub">Integrate FamPay automatic payment verification with lightning-fast speed and military-grade security. Base URL: <b>https://fampay-api-7msf.onrender.com</b></p>
+<p class="sub">Integrate UPI payment collection and automatic Gmail-based payment verification with a simple REST API.</p>
+<div class="base-panel"><div class="base-label">🌐 YOUR API BASE URL</div><div class="base-value-row"><span class="base-value" id="baseUrlValue">https://fampay-api-7msf.onrender.com</span><button class="base-copy" id="copyBaseUrl" type="button">📋 COPY URL</button></div><p style="font-size:11px;color:#6B7280;line-height:1.5;margin-top:8px">Use this base URL before any endpoint path shown below. It automatically matches the domain currently serving this documentation.</p></div>
 <div class="stats">
 <div class="stat"><div class="stat-icon" style="background:#ECFDF5">✅</div><b>99.9% Uptime</b></div>
 <div class="stat"><div class="stat-icon" style="background:#FEF3C7">⚡</div><b>&lt;200ms Response</b></div>
@@ -130,27 +157,14 @@ body{font-family:'Inter',sans-serif;background:linear-gradient(180deg,#7C6CF6 0%
 </div></div>
 
 
-<div class="card" id="generate-api-key">
-<div class="sec-head"><div class="sec-num">🔑</div><div><div class="sec-title">Generate API Key</div><div class="sec-type">CREATE YOUR MERCHANT KEY</div></div></div>
-<div class="sec-desc">Enter your Gmail details and payment UPI information to create your own API key.</div>
-<form class="key-form" id="apiKeyForm">
-  <div><label for="keyGmail">Gmail Address</label><input id="keyGmail" name="gmail" type="email" placeholder="yourname@gmail.com" autocomplete="email" required></div>
-  <div><label for="keyGpass">Gmail App Password</label><input id="keyGpass" name="gpass" type="password" placeholder="Enter 16-character App Password" autocomplete="new-password" required></div>
-  <div><label for="keyUpi">UPI ID (optional if mobile is entered)</label><input id="keyUpi" name="upi" type="text" placeholder="yourupi@bank"></div>
-  <div><label for="keyMobile">Mobile Number (optional if UPI ID is entered)</label><input id="keyMobile" name="mobile" type="tel" inputmode="numeric" placeholder="10-digit mobile number"></div>
-  <button class="key-submit" id="keySubmit" type="submit">🔐 Generate API Key</button>
-</form>
-<div class="pro-tip">🔒 Use a Google App Password, not your normal Gmail password. Your details will be submitted to this API server over HTTPS when the site is served securely.</div>
-<div class="key-result" id="keyResult" role="status" aria-live="polite"></div>
-</div>
 <div class="card">
 <div class="sec-head"><div class="sec-num">1</div><div><div class="sec-title">Generate QR Code</div><div class="sec-type">GET Payment Request</div></div></div>
 <div class="sec-desc">Generate a dynamic UPI QR code for receiving instant payments with automatic verification.</div>
-<div class="endpoint"><span class="method">GET</span><code>https://fampay-api-7msf.onrender.com/fam_create?amount=AMOUNT&api_key=YOUR_API_KEY</code></div>
+<div class="endpoint"><span class="method">GET</span><code>/fam_create?amount=AMOUNT&api_key=YOUR_API_KEY</code></div>
 <div class="req-title">📋 REQUEST PARAMETERS</div>
 <div class="table"><div class="t-head"><span>PARAMETER</span><span>TYPE</span><span>DESCRIPTION</span></div>
 <div class="t-row"><b>amount</b><span class="tag-req">Required</span><span>Payment Amount (1 - 100000). Example: 1</span></div>
-<div class="t-row"><b>api_key</b><span class="tag-req">Required</span><span>Your personal API key from Telegram Bot</span></div></div>
+<div class="t-row"><b>api_key</b><span class="tag-req">Required</span><span>Your personal API key generated from the form below</span></div></div>
 <div class="code-wrap"><div class="code-head"><span class="code-label">✅ SUCCESS RESPONSE</span><button class="copy" onclick="copyCode(this)">📋 COPY</button></div>
 <pre>{
   "status": "success",
@@ -169,11 +183,11 @@ body{font-family:'Inter',sans-serif;background:linear-gradient(180deg,#7C6CF6 0%
 <div class="card">
 <div class="sec-head"><div class="sec-num">2</div><div><div class="sec-title">Verify Payment Status</div><div class="sec-type">Check Transaction Completion</div></div></div>
 <div class="sec-desc">Verify if payment has been successfully received using the unique Order ID.</div>
-<div class="endpoint"><span class="method">GET</span><code>https://fampay-api-7msf.onrender.com/fam_verify?order_id=ORDER_ID&api_key=YOUR_API_KEY</code></div>
+<div class="endpoint"><span class="method">GET</span><code>/fam_verify?order_id=ORDER_ID&api_key=YOUR_API_KEY</code></div>
 <div class="req-title">📋 REQUEST PARAMETERS</div>
 <div class="table"><div class="t-head"><span>PARAMETER</span><span>TYPE</span><span>DESCRIPTION</span></div>
 <div class="t-row"><b>order_id</b><span class="tag-req">Required</span><span>Order ID from QR generation</span></div>
-<div class="t-row"><b>api_key</b><span class="tag-req">Required</span><span>Your API key</span></div></div>
+<div class="t-row"><b>api_key</b><span class="tag-req">Required</span><span>Your personal API key</span></div></div>
 <div class="code-wrap"><div class="code-head"><span class="code-label">✅ SUCCESS RESPONSE</span><button class="copy" onclick="copyCode(this)">📋 COPY</button></div>
 <pre>{
   "status": "success",
@@ -204,21 +218,52 @@ body{font-family:'Inter',sans-serif;background:linear-gradient(180deg,#7C6CF6 0%
 <div class="feat"><div class="feat-icon" style="background:#D1FAE5">🛡️</div><h4>Bank-Grade Security</h4><p>End-to-end encryption with SSL/TLS protocols</p></div>
 <div class="feat"><div class="feat-icon" style="background:#EDE9FF">💻</div><h4>Developer Friendly</h4><p>Simple REST API with comprehensive documentation</p></div>
 </div></div>
+<div class="card" id="generate-api-key">
+<div class="sec-head"><div class="sec-num">🔑</div><div><div class="sec-title">Generate API Key</div><div class="sec-type">CREATE YOUR MERCHANT KEY</div></div></div>
+<div class="sec-desc">Enter your Gmail details and payment UPI information to create your own API key.</div>
+<form class="key-form" id="apiKeyForm">
+  <div><label for="keyGmail">Gmail Address</label><input id="keyGmail" name="gmail" type="email" placeholder="yourname@gmail.com" autocomplete="email" required></div>
+  <div><label for="keyGpass">Gmail App Password</label><input id="keyGpass" name="gpass" type="password" placeholder="Enter 16-character App Password" autocomplete="new-password" required></div>
+  <div><label for="keyUpi">UPI ID (required)</label><input id="keyUpi" name="upi" type="text" placeholder="yourupi@bank" required></div>
+  <div><label for="keyMobile">Mobile Number (required)</label><input id="keyMobile" name="mobile" type="tel" inputmode="numeric" placeholder="10-digit mobile number" required></div>
+  <button class="key-submit" id="keySubmit" type="submit">🔐 Generate API Key</button>
+</form>
+<div class="pro-tip">🔒 Use a Google App Password, not your normal Gmail password. Your details will be submitted to this API server over HTTPS when the site is served securely.</div>
+<div class="key-result" id="keyResult" role="status" aria-live="polite"></div>
+</div>
 <div class="footer"><div style="background:#fff;border-radius:20px;padding:16px">
-<div style="font-size:10px;font-weight:800;letter-spacing:1.2px;color:#6B7280"><span class="dot"></span>OFFICIAL API INFRASTRUCTURE - https://fampay-api-7msf.onrender.com</div>
+<div style="font-size:10px;font-weight:800;letter-spacing:1.2px;color:#6B7280"><span class="dot"></span>OFFICIAL API INFRASTRUCTURE - <span id="footerBaseUrl">https://fampay-api-7msf.onrender.com</span></div>
 <div class="footer-links"><span>🔷 API v2.0</span><span>● 24/7 Active</span><span>🌐 Global Access</span></div>
 <div style="margin-top:12px"><a href="https://t.me/FampayPaymentApi_Bot" style="background:#229ED9;color:#fff;padding:8px 16px;border-radius:20px;text-decoration:none;font-size:12px;font-weight:700">💬 Get API Key via Bot</a> <a href="https://t.me/FampayPaymentApi_Bot" style="background:#111827;color:#fff;padding:8px 16px;border-radius:20px;text-decoration:none;font-size:12px;font-weight:700">🤖 @FamPayPaymentApi_Bot</a></div>
 </div></div></div>
 <script>
+
+const themeToggle=document.getElementById('themeToggle');
+const savedTheme=localStorage.getItem('fampay-theme')||'light';
+document.body.dataset.theme=savedTheme;
+themeToggle.textContent=savedTheme==='dark'?'☀️ Light mode':'🌙 Dark mode';
+themeToggle.addEventListener('click',function(){
+  const next=document.body.dataset.theme==='dark'?'light':'dark';
+  document.body.dataset.theme=next;
+  localStorage.setItem('fampay-theme',next);
+  themeToggle.textContent=next==='dark'?'☀️ Light mode':'🌙 Dark mode';
+});
+const liveBaseUrl=window.location.origin;
+document.getElementById('baseUrlValue').textContent=liveBaseUrl;
+document.getElementById('footerBaseUrl').textContent=liveBaseUrl;
+document.getElementById('copyBaseUrl').addEventListener('click',async function(){
+  await navigator.clipboard.writeText(liveBaseUrl);
+  this.textContent='✅ COPIED';
+  setTimeout(()=>this.textContent='📋 COPY URL',1500);
+});
 document.getElementById('apiKeyForm').addEventListener('submit',async function(e){
   e.preventDefault();
   const form=e.currentTarget,btn=document.getElementById('keySubmit'),box=document.getElementById('keyResult');
   const data=Object.fromEntries(new FormData(form).entries());
-  if(!data.upi.trim()&&!data.mobile.trim()){box.className='key-result error';box.style.display='block';box.textContent='Please enter either a UPI ID or mobile number.';return;}
+  if(!data.upi.trim()||!data.mobile.trim()){box.className='key-result error';box.style.display='block';box.textContent='Please enter both your UPI ID and mobile number.';return;}
   btn.disabled=true;btn.textContent='⏳ Generating...';box.style.display='none';
   try{
-    const response=await fetch('/create_key',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
-    const result=await response.json();
+    const response=await fetch('/create_key',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});    const result=await response.json();
     box.style.display='block';
     if(!response.ok||result.status!=='success'){
       box.className='key-result error';box.textContent=result.message||'Could not generate API key. Please check your details.';return;
@@ -437,7 +482,6 @@ def check_gmail_payment(record,order):
         import traceback
         traceback.print_exc()
         return None,f"Email verification failed: {str(e)[:100]}"
-
 @app.get("/")
 def index():
     return render_template_string(HTML)
@@ -466,11 +510,11 @@ def create_key():
             mobile = str(body.get("mobile") or request.args.get("mobile","")).strip()
             incoming_key = str(body.get("api_key") or request.args.get("api_key","")).strip()
         
-        # Auto-generate UPI if missing but mobile present
-        if not upi and mobile:
-            upi = f"{mobile}@fam"
-        if not upi and not mobile:
-            return error("upi or mobile is required")
+        # Both merchant UPI ID and mobile number are required for key registration.
+        if not upi:
+            return error("upi is required")
+        if not mobile:
+            return error("mobile is required")
         if not gmail:
             return error("gmail is required")
         if not gpass:
