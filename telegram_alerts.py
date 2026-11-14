@@ -1,3 +1,4 @@
+import html
 import os
 import json
 import time
@@ -146,7 +147,7 @@ def consume_prelink(token):
             return None
         links.pop(str(token), None)
         _write(LINKS_FILE, links)
-        return {"telegram_id": str(entry["chat_id"]), "telegram_name": entry.get("name") or "Telegram User", "telegram_username": entry.get("username") or ""}
+        return str(entry["chat_id"])
 
 
 def _basic_admin_ok():
@@ -339,7 +340,8 @@ def register_telegram_alerts(app):
     @app.post("/telegram/prelink/status")
     def telegram_prelink_status():
         body = request.get_json(silent=True) or {}
-        return jsonify({"ok": True, "verified": bool(verified_prelink(body.get("token", "")))})
+        identity = prelink_identity(body.get("token", ""))
+        return jsonify({"ok": True, "verified": bool(identity), "telegram_name": identity.get("telegram_name") if identity else None})
 
     @app.post("/telegram/webhook")
     def telegram_webhook():
