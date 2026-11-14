@@ -233,6 +233,7 @@ html[data-theme=dark] .stat-icon,html[data-theme=dark] .doc-icon,html[data-theme
 @keyframes pillFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
 @keyframes premiumSheen{0%,68%,100%{transform:translateX(-120%)}84%{transform:translateX(120%)}}
 @media(max-width:650px){.hero-inner:after{right:-205px;top:38px;width:210px;height:210px}.motion-version{font-size:9px}.stat-icon{width:40px;height:40px}}
+
 @media(prefers-reduced-motion:reduce){.hero,.hero:before,.hero:after,.hero-inner:after,.motion-version,.motion-spark,.hero-pill,.stat-icon,.doc-icon,.feature-icon,.brand-mark:after{animation:none!important}}
 
 /* V3: highly visible motion layer; scroll reveal above remains enabled */
