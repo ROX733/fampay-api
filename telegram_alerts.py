@@ -333,11 +333,18 @@ def register_telegram_alerts(app):
                     _dashboard(callback_chat, is_admin)
                 elif action == "bot_speed" and is_admin:
                     started = time.monotonic()
-                    _send(callback_chat, "⚡ Bot is online. Processing latency: {:.0f} ms".format((time.monotonic() - started) * 1000))
+                    ok, detail = _bot_call("getMe", {})
+                    elapsed = (time.monotonic() - started) * 1000
+                    _send(callback_chat, ("⚡ <b>Bot Speed Test</b>\n\n"
+                                          "🤖 Telegram API: " + ("Online ✅" if ok else "Unavailable ❌") +
+                                          "\n⏱ Response time: <b>{:.0f} ms</b>".format(elapsed) +
+                                          "\n📡 Test: Telegram getMe request"))
                 elif action == "admin_users" and is_admin:
-                    _send(callback_chat, "🔎 Find User Details\\nSend: /user example@gmail.com (or /user 9876543210)")
+                    _send(callback_chat, "🔎 <b>Find User Details</b>\nSend: /user example@gmail.com (or /user 9876543210)")
                 elif action == "admin_orders" and is_admin:
-                    _send(callback_chat, "🔍 Find Orders\\nSend: /order FAMPAY...")
+                    _send(callback_chat, "🔍 <b>Find Orders</b>\nSend: /order FAMPAY...")
+                elif action not in ("dashboard", "bot_speed", "admin_users", "admin_orders"):
+                    app.logger.info("Unknown Telegram callback action: %s", action[:60])
             return jsonify({"ok": True})
 
         message = update.get("message") or update.get("edited_message") or {}
