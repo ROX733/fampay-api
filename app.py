@@ -476,26 +476,35 @@ def create_key():
         if not gpass:
             return error("gpass (Gmail App Password) is required")
         
-        # Auto-generate API key - Custom not allowed (as per user requirement)
-        # Ignore incoming_key, always auto-generate
+        # Validate input format before attempting the Gmail connection.
+        if not re.fullmatch(r"[^\\s@]+@gmail\\.com", gmail, re.I):
+            return error("Enter a valid @gmail.com address")
+        if len(gpass) != 16:
+            return error("Invalid Gmail App Password. Enter the 16-character Google App Password.")
+        if "@" not in upi or upi.startswith("@") or upi.endswith("@"):
+            return error("Invalid UPI ID. Example: yourname@fam")
+
+        # Verify the supplied credentials against Gmail IMAP before creating or saving any API key.
+        try:
+            with imaplib.IMAP4_SSL(IMAP_HOST, 993, ssl_context=ssl.create_default_context(), timeout=15) as mail:
+                mail.login(gmail, gpass)
+                status, _ = mail.select("INBOX", readonly=True)
+                if status != "OK":
+                    return error("Gmail login succeeded, but IMAP could not open the inbox. Check that IMAP access is enabled.")
+        except imaplib.IMAP4.error:
+            return error("Gmail IMAP authentication failed. Check the Gmail address and 16-character App Password, and make sure 2-Step Verification and IMAP access are enabled.")
+        except (OSError, TimeoutError) as e:
+            return error("Could not connect to Gmail IMAP. Please try again later.")
+        except Exception:
+            return error("Gmail IMAP verification failed. Please check your credentials and try again.")
+
+        # Generate an API key only after Gmail IMAP verification succeeds.
         keys = get_all_keys()
         while True:
-            # Generate like FAM_fa0ba60877f2c4fa0f0584301dbc594ce3f12018867d2bdd format
             api_key = "FAM_" + secrets.token_hex(20).upper() + secrets.token_hex(10).lower()
-            # Ensure uniqueness
             if api_key not in keys:
                 break
-        
-        # Lenient validations
-        if "@gmail.com" not in gmail.lower():
-            return error("Gmail must be @gmail.com")
-        # App password: allow 16 chars, letters only or alphanumeric, with or without spaces (we already stripped)
-        if len(gpass) < 10 or len(gpass) > 20:
-            return error(f"Invalid App Password length: {len(gpass)}, expected 16")
-        # UPI: just check contains @
-        if "@" not in upi:
-            return error(f"Invalid UPI ID: {upi}, must contain @ like papai69@fam")
-        
+
         with LOCK:
             latest = get_all_keys()
             latest[api_key] = {
