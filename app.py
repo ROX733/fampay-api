@@ -359,7 +359,8 @@ def find_amount(text):
         if m:
             try:
                 v=amount_value(m.group(1))
-                if v and v > 0 and v <= 100000:                    return v
+                if v and v > 0 and v <= 100000:
+                    return v
             except:
                 continue
     return None
@@ -538,7 +539,8 @@ def create_key():
                     return error("Gmail login succeeded, but IMAP could not open the inbox. Check that IMAP access is enabled.")
         except imaplib.IMAP4.error:
             return error("Gmail IMAP authentication failed. Check the Gmail address and 16-character App Password, and make sure 2-Step Verification and IMAP access are enabled.")
-        except (OSError, TimeoutError) as e:            return error("Could not connect to Gmail IMAP. Please try again later.")
+        except (OSError, TimeoutError):
+            return error("Could not connect to Gmail IMAP. Please try again later.")
         except Exception:
             return error("Gmail IMAP verification failed. Please check your credentials and try again.")
 
@@ -718,3 +720,10 @@ def fam_verify():
         return jsonify({"status":"error","message":"Transaction failed - Payment not received","order_id":oid,"dev":"@ROXXOP"})
     res,msg=check_gmail_payment(keys[api_key],order)
     if not res:
+        return jsonify({"status":"error","message":msg or "Transaction failed - Payment not received","order_id":oid,"dev":"@ROXXOP"}),200
+
+    with LOCK:
+        PaidRecords[oid] = res
+        save_json(PAID_FILE, PaidRecords)
+
+    return jsonify({"status":"success","data":res,"dev":"@ROXXOP"}),200
