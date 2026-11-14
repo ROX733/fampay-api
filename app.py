@@ -91,6 +91,17 @@ body{font-family:'Inter',sans-serif;background:linear-gradient(180deg,#7C6CF6 0%
 .copy{background:#7C6CF6;color:#fff;border:none;padding:6px 12px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;transition:.2s}
 .code-wrap pre{margin:0;padding:14px;color:#E2E8F0;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;overflow:auto;white-space:pre-wrap;word-break:break-word}
 .pro-tip{background:#FFFBEB;border:1px solid #FDE68A;border-radius:12px;padding:11px 12px;font-size:11.5px;color:#92400E;line-height:1.5;margin-top:14px;display:flex;gap:8px;animation:bounce 3s infinite}
+
+.key-form{display:grid;gap:11px;margin-top:14px}
+.key-form label{display:block;font-size:11px;font-weight:800;color:#374151;margin-bottom:6px}
+.key-form input{width:100%;border:1px solid #E5E7EB;border-radius:11px;padding:12px 13px;font:13px Inter,sans-serif;outline:none;background:#FAFAFF}
+.key-form input:focus{border-color:#7C6CF6;box-shadow:0 0 0 3px rgba(124,108,246,.12)}
+.key-submit{width:100%;border:0;border-radius:12px;background:linear-gradient(135deg,#7C6CF6,#5B4FE8);color:#fff;padding:13px;font-size:13px;font-weight:800;cursor:pointer;margin-top:4px}
+.key-submit:disabled{opacity:.6;cursor:wait}
+.key-result{display:none;margin-top:14px;border:1px solid #BBF7D0;background:#F0FDF4;border-radius:12px;padding:13px}
+.key-result.error{border-color:#FECACA;background:#FEF2F2;color:#991B1B}
+.key-value{font-family:'JetBrains Mono',monospace;font-size:11px;word-break:break-all;background:#fff;border:1px solid #D1D5DB;border-radius:8px;padding:10px;margin-top:8px;color:#111827}
+.key-copy{border:0;background:#111827;color:#fff;padding:8px 12px;border-radius:8px;font-size:11px;font-weight:700;margin-top:8px;cursor:pointer}
 .features{display:grid;gap:12px;margin-top:14px}
 .feat{background:#fff;border:1px solid #F3F4F6;border-radius:16px;padding:18px;text-align:center;transition:transform .3s}
 .feat:hover{transform:translateY(-3px)}
@@ -118,6 +129,20 @@ body{font-family:'Inter',sans-serif;background:linear-gradient(180deg,#7C6CF6 0%
 <div class="stat"><div class="stat-icon" style="background:#DBEAFE">🔒</div><b>SSL Encrypted</b></div>
 </div></div>
 
+
+<div class="card" id="generate-api-key">
+<div class="sec-head"><div class="sec-num">🔑</div><div><div class="sec-title">Generate API Key</div><div class="sec-type">CREATE YOUR MERCHANT KEY</div></div></div>
+<div class="sec-desc">Enter your Gmail details and payment UPI information to create your own API key.</div>
+<form class="key-form" id="apiKeyForm">
+  <div><label for="keyGmail">Gmail Address</label><input id="keyGmail" name="gmail" type="email" placeholder="yourname@gmail.com" autocomplete="email" required></div>
+  <div><label for="keyGpass">Gmail App Password</label><input id="keyGpass" name="gpass" type="password" placeholder="Enter 16-character App Password" autocomplete="new-password" required></div>
+  <div><label for="keyUpi">UPI ID (optional if mobile is entered)</label><input id="keyUpi" name="upi" type="text" placeholder="yourupi@bank"></div>
+  <div><label for="keyMobile">Mobile Number (optional if UPI ID is entered)</label><input id="keyMobile" name="mobile" type="tel" inputmode="numeric" placeholder="10-digit mobile number"></div>
+  <button class="key-submit" id="keySubmit" type="submit">🔐 Generate API Key</button>
+</form>
+<div class="pro-tip">🔒 Use a Google App Password, not your normal Gmail password. Your details will be submitted to this API server over HTTPS when the site is served securely.</div>
+<div class="key-result" id="keyResult" role="status" aria-live="polite"></div>
+</div>
 <div class="card">
 <div class="sec-head"><div class="sec-num">1</div><div><div class="sec-title">Generate QR Code</div><div class="sec-type">GET Payment Request</div></div></div>
 <div class="sec-desc">Generate a dynamic UPI QR code for receiving instant payments with automatic verification.</div>
@@ -184,7 +209,32 @@ body{font-family:'Inter',sans-serif;background:linear-gradient(180deg,#7C6CF6 0%
 <div class="footer-links"><span>🔷 API v2.0</span><span>● 24/7 Active</span><span>🌐 Global Access</span></div>
 <div style="margin-top:12px"><a href="https://t.me/FampayPaymentApi_Bot" style="background:#229ED9;color:#fff;padding:8px 16px;border-radius:20px;text-decoration:none;font-size:12px;font-weight:700">💬 Get API Key via Bot</a> <a href="https://t.me/FampayPaymentApi_Bot" style="background:#111827;color:#fff;padding:8px 16px;border-radius:20px;text-decoration:none;font-size:12px;font-weight:700">🤖 @FamPayPaymentApi_Bot</a></div>
 </div></div></div>
-<script>function copyCode(btn){const pre=btn.closest('.code-wrap').querySelector('pre');navigator.clipboard.writeText(pre.innerText);const old=btn.innerHTML;btn.innerHTML='✅ COPIED';btn.style.background='#10B981';setTimeout(()=>{btn.innerHTML=old;btn.style.background='#7C6CF6'},1500);}</script>
+<script>
+document.getElementById('apiKeyForm').addEventListener('submit',async function(e){
+  e.preventDefault();
+  const form=e.currentTarget,btn=document.getElementById('keySubmit'),box=document.getElementById('keyResult');
+  const data=Object.fromEntries(new FormData(form).entries());
+  if(!data.upi.trim()&&!data.mobile.trim()){box.className='key-result error';box.style.display='block';box.textContent='Please enter either a UPI ID or mobile number.';return;}
+  btn.disabled=true;btn.textContent='⏳ Generating...';box.style.display='none';
+  try{
+    const response=await fetch('/create_key',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    const result=await response.json();
+    box.style.display='block';
+    if(!response.ok||result.status!=='success'){
+      box.className='key-result error';box.textContent=result.message||'Could not generate API key. Please check your details.';return;
+    }
+    box.className='key-result';
+    box.innerHTML='<b>✅ API Key Generated Successfully</b><div class="key-value" id="generatedKey"></div><button type="button" class="key-copy" id="copyGeneratedKey">📋 COPY API KEY</button><p style="font-size:11px;color:#166534;margin-top:9px">Save this key securely. It will not be shown again on this page.</p>';
+    document.getElementById('generatedKey').textContent=result.api_key;
+    document.getElementById('copyGeneratedKey').addEventListener('click',async function(){
+      await navigator.clipboard.writeText(result.api_key);this.textContent='✅ COPIED';
+    });
+    form.reset();
+  }catch(err){box.className='key-result error';box.style.display='block';box.textContent='Network error. Please try again.';}
+  finally{btn.disabled=false;btn.textContent='🔐 Generate API Key';}
+});
+function copyCode(btn){const pre=btn.closest('.code-wrap').querySelector('pre');navigator.clipboard.writeText(pre.innerText);const old=btn.innerHTML;btn.innerHTML='✅ COPIED';btn.style.background='#10B981';setTimeout(()=>{btn.innerHTML=old;btn.style.background='#7C6CF6'},1500);}
+</script>
 </body></html>
 """
 
