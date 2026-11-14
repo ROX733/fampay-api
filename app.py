@@ -713,36 +713,44 @@ def fam_verify():
     if not oid:
         return jsonify({"status":"error","message":"order_id required","dev":"@ROXXOP"}),400
 
-    # Count every authenticated verify request for this order, including pending
-    # and expired checks. Persist the counter so it survives server restarts.
     with LOCK:
         order=Orders.get(oid)
         if not order:
-            return jsonify({"status":"error","message":"Transaction failed - Payment not received","order_id":oid,"dev":"@ROXXOP"}),404
-        order["total_request"]=int(order.get("total_request",0))+1
-        total_request=order["total_request"]
-        Orders[oid]=order
-        save_json(ORDERS_FILE,Orders)
+            return jsonify({"status":"error","message":"Transaction failed - Payment not received","order_id":oid,"already_verified":"false","dev":"@ROXXOP"}),404
 
+        # Only a previously successful verification is treated as already verified.
         paid=PaidRecords.get(oid)
         if paid:
-            paid["total_request"]=str(total_request)
+            paid.pop("total_request",None)
             PaidRecords[oid]=paid
             save_json(PAID_FILE,PaidRecords)
 
     if paid:
-        return jsonify({"status":"success","data":paid,"dev":"@ROXXOP"}),200
+        return jsonify({
+            "status":"success",
+            "order_id":oid,
+            "already_verified":"true",
+            "message":"Payment was already verified",
+            "dev":"@ROXXOP"
+        }),200
 
-    # A QR/order expires exactly five minutes after creation. Never check Gmail
-    # for an expired order.
+    # Never check Gmail after the five-minute QR/order expiry.
     if int(time.time()) >= int(order.get("expires_at",0)):
-        return jsonify({"status":"error","message":"QR Expired","order_id":oid,"total_request":str(total_request),"dev":"@ROXXOP"}),410
+        return jsonify({"status":"error","message":"QR Expired","order_id":oid,"already_verified":"false","dev":"@ROXXOP"}),410
 
     res,msg=check_gmail_payment(keys[api_key],order)
     if not res:
-        return jsonify({"status":"error","message":msg or "Transaction failed - Payment not received","order_id":oid,"total_request":str(total_request),"dev":"@ROXXOP"}),200
+        return jsonify({
+            "status":"error",
+            "message":msg or "Transaction failed - Payment not received",
+            "order_id":oid,
+            "already_verified":"false",
+            "dev":"@ROXXOP"
+        }),200
 
-    res["total_request"]=str(total_request)
+    # First successful verification returns full payment details.
+    res.pop("total_request",None)
+    res["already_verified"]="false"
     with LOCK:
         PaidRecords[oid]=res
         save_json(PAID_FILE,PaidRecords)
