@@ -534,6 +534,7 @@ document.getElementById('copyVerifyTest').addEventListener('click',async functio
 let telegramToken='',telegramVerified=false;
 const tgButton=document.getElementById('verifyTelegram'),tgStatus=document.getElementById('telegramStatus'),keyButton=document.getElementById('keySubmit');
 tgButton.addEventListener('click',async()=>{
+ const telegramWindow=window.open('about:blank','_blank');
  tgButton.disabled=true;
  try{
   const r=await fetch('/telegram/prelink',{method:'POST'}),j=await r.json();
@@ -550,7 +551,8 @@ tgButton.addEventListener('click',async()=>{
    }catch(e){status.textContent=' Verification check failed.'}
   });
   tgStatus.append(link,check,status);
- }catch(e){tgStatus.textContent='Could not start verification. Please retry.'}
+  if(telegramWindow){telegramWindow.location.href=j.telegram_link;}else{status.textContent=' Tap Open Telegram Bot to continue.';}
+ }catch(e){if(telegramWindow)telegramWindow.close();tgStatus.textContent='Could not start verification. Please retry.'}
  finally{tgButton.disabled=false}
 });
 document.getElementById('apiKeyForm').addEventListener('submit',async function(e){
