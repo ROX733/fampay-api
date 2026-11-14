@@ -1,10 +1,14 @@
 
 import os, json, time, secrets, re, math, ssl, imaplib, email
+from io import BytesIO
 from datetime import datetime, timezone
 from email.header import decode_header, make_header
 from threading import RLock
 from urllib.parse import quote
-from flask import Flask, request, jsonify, render_template_string
+from flask import Flask, request, jsonify, render_template_string, send_file
+import qrcode
+from qrcode.constants import ERROR_CORRECT_H
+from PIL import ImageDraw, ImageFont
 
 app = Flask(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -127,7 +131,7 @@ body{font-family:'Inter',sans-serif;background:linear-gradient(180deg,#7C6CF6 0%
   "status": "success",
   "data": {
     "order_id": "FAMPAY2026042300401024D72AA0",
-    "qr_url": "https://fampay.anujbots.xyz/qr_codes/FAMPAY2026042300401024D72AA0.png",
+    "qr_url": "https://fampay-api-7msf.onrender.com/qr_codes/FAMPAY2026042300401024D72AA0.png",
     "upi_id": "papai69@fam",
     "amount": "10",
     "created_at_ist": "21-10-2026 23:00:41",
@@ -526,12 +530,12 @@ def fam_create():
     # IST time format
     now_ist = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
     exp_ist = datetime.fromtimestamp(exp).strftime("%d-%m-%Y %H:%M:%S")
-    # QR URL like https://fampay.anujbots.xyz/qr_codes/FAMPAY...png
-    qr_url = f"https://fampay.anujbots.xyz/qr_codes/{order_id}.png"
-    # Keep internal upi_link and qr for internal use but don't expose in API response
+    # Serve QR images from this API host (or PUBLIC_BASE_URL when configured).
+    public_base = os.getenv("PUBLIC_BASE_URL", request.host_url).strip().rstrip("/")
+    qr_url = f"{public_base}/qr_codes/{order_id}.png"
+    # Keep the UPI payload locally; no third-party QR service is used.
     upi_link="upi://pay?pa="+quote(merchant_upi,safe="")+"&pn=Merchant&am="+format(amount,".2f")+"&cu=INR&tn="+quote(order_id,safe="")
-    qr_internal="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data="+quote(upi_link,safe="")
-    order={"order_id":order_id,"api_key":api_key,"amount":amount,"upi":merchant_upi,"upi_link":upi_link,"qr_code":qr_internal,"qr_url":qr_url,"expires_at":exp,"status":"pending","created_at":int(time.time())}
+    order={"order_id":order_id,"api_key":api_key,"amount":amount,"upi":merchant_upi,"upi_link":upi_link,"qr_code":qr_url,"qr_url":qr_url,"expires_at":exp,"status":"pending","created_at":int(time.time())}
     with LOCK:
         Orders[order_id]=order
         save_json(ORDERS_FILE,Orders)
@@ -548,6 +552,48 @@ def fam_create():
         },
         "dev":"@ROXXOP"
     }),201
+
+@app.get("/qr_codes/<order_id>.png")
+def serve_order_qr(order_id):
+    # Only generate QR images for orders created by this API.
+    with LOCK:
+        order = Orders.get(order_id)
+    if not order:
+        return error("QR code not found", 404)
+
+    upi_link = str(order.get("upi_link", "")).strip()
+    if not upi_link.startswith("upi://pay?"):
+        return error("Invalid QR payment data", 404)
+
+    qr = qrcode.QRCode(version=None, error_correction=ERROR_CORRECT_H, box_size=10, border=4)
+    qr.add_data(upi_link)
+    qr.make(fit=True)
+    qr_image = qr.make_image(fill_color="black", back_color="white").convert("RGB")
+
+    # Small FamPay-orange mark in a white safe-zone; QR stays standard black and white.
+    width, height = qr_image.size
+    logo_size = max(42, int(min(width, height) * 0.14))
+    left = (width - logo_size) // 2
+    top = (height - logo_size) // 2
+    padding = max(5, int(logo_size * 0.12))
+    draw = ImageDraw.Draw(qr_image)
+    draw.rounded_rectangle((left-padding, top-padding, left+logo_size+padding, top+logo_size+padding), radius=max(6, int(logo_size*0.16)), fill="white")
+    draw.rounded_rectangle((left, top, left+logo_size, top+logo_size), radius=max(5, int(logo_size*0.14)), fill="#FFAD00")
+
+    # Compact white FamPay monogram, intentionally small for scan reliability.
+    try:
+        font = ImageFont.truetype("DejaVuSans-Bold.ttf", int(logo_size * 0.70))
+    except OSError:
+        font = ImageFont.load_default()
+    ImageDraw.Draw(qr_image).text((left+logo_size/2, top+logo_size/2-1), "F", font=font, fill="white", anchor="mm")
+
+    output = BytesIO()
+    qr_image.save(output, format="PNG", optimize=True)
+    output.seek(0)
+    response = send_file(output, mimetype="image/png", download_name=f"{order_id}.png")
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
 
 @app.route("/fam_verify", methods=["GET", "POST"])
 def fam_verify():
