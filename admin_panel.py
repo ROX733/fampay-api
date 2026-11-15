@@ -1,3 +1,4 @@
+from mongo_storage import read_state, write_state
 import os
 import json
 import time
@@ -48,25 +49,15 @@ table{width:100%;border-collapse:collapse;min-width:760px}th,td{text-align:left;
 </main></body></html>"""
 
 def _read_json(path):
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            value = json.load(f)
-        return value if isinstance(value, dict) else {}
-    except Exception:
-        return {}
+    return read_state(path)
 
 def _write_log(entry):
     rows = _read_json(ADMIN_LOG_FILE)
-    # Store logs as an object keyed by monotonically unique timestamp+random-ish counter.
     key = str(time.time_ns())
     rows[key] = entry
-    # Keep the newest 2,000 events so JSON storage does not grow without bound.
     if len(rows) > 2000:
         rows = dict(sorted(rows.items(), key=lambda item: item[0])[-2000:])
-    tmp = ADMIN_LOG_FILE + ".tmp"
-    with open(tmp, "w", encoding="utf-8") as f:
-        json.dump(rows, f, ensure_ascii=False, indent=2)
-    os.replace(tmp, ADMIN_LOG_FILE)
+    write_state(ADMIN_LOG_FILE, rows)
 
 def _admin_required():
     username = os.getenv("ADMIN_USERNAME", "")
