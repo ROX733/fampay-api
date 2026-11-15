@@ -1,3 +1,4 @@
+from mongo_storage import read_state, write_state
 import html
 import os
 import json
@@ -16,20 +17,10 @@ _BOT_USERNAME = "FampayApiAlert_Bot"
 
 
 def _read(path):
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            value = json.load(f)
-        return value if isinstance(value, dict) else {}
-    except Exception:
-        return {}
-
+    return read_state(path)
 
 def _write(path, value):
-    tmp = path + ".tmp"
-    with open(tmp, "w", encoding="utf-8") as f:
-        json.dump(value, f, ensure_ascii=False, indent=2)
-    os.replace(tmp, path)
-
+    write_state(path, value)
 
 def _bot_call(method, payload):
     token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
