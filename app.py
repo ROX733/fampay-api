@@ -1,3 +1,4 @@
+from mongo_storage import read_state, write_state
 
 import os, json, time, secrets, re, math, ssl, imaplib, email
 from io import BytesIO
@@ -45,29 +46,14 @@ def decrypt_gmail_password(record):
     return value  # Legacy plaintext records are migrated when FERNET_KEY is configured.
 
 def load_json(p):
-    try:
-        with open(p,"r",encoding="utf-8") as f:
-            v=json.load(f)
-        return v if isinstance(v,dict) else {}
-    except:
-        return {}
+    return read_state(p)
 
-def save_json(p,v):
-    t=p+".tmp"
-    with open(t,"w",encoding="utf-8") as f:
-        json.dump(v,f,indent=2,ensure_ascii=False)
-    os.replace(t,p)
+def save_json(p, v):
+    write_state(p, v)
 
 def get_all_keys():
     with LOCK:
-        try:
-            with open(KEYS_FILE,"r",encoding="utf-8") as f:
-                data=json.load(f)
-                if isinstance(data,dict):
-                    return data
-        except:
-            pass
-    return {}
+        return load_json(KEYS_FILE)
 
 BotKeys=load_json(KEYS_FILE)
 Orders=load_json(ORDERS_FILE)
