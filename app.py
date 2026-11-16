@@ -1043,9 +1043,9 @@ def fam_verify():
         # Only a previously successful verification is treated as already verified.
         paid=PaidRecords.get(oid)
         if paid:
-            paid.pop("total_request",None)
-            PaidRecords[oid]=paid
-            save_json(PAID_FILE,PaidRecords)
+            # Preserve the original UTR and amount for repeat verification requests.
+            paid = dict(paid)
+            paid.pop("total_request", None)
 
     if paid:
         return jsonify({
@@ -1053,6 +1053,7 @@ def fam_verify():
             "order_id":oid,
             "already_verified":"true",
             "message":"Payment was already verified",
+            "data":paid,
             "dev":"@ROXXOP"
         }),200
 
@@ -1074,6 +1075,18 @@ def fam_verify():
     res.pop("total_request",None)
     res["already_verified"]="false"
     with LOCK:
+        # A second request may have completed Gmail verification while we were
+        # checking. Only the first request is a new payment event.
+        existing = PaidRecords.get(oid)
+        if existing:
+            return jsonify({
+                "status":"success",
+                "order_id":oid,
+                "already_verified":"true",
+                "message":"Payment was already verified",
+                "data":{k: v for k, v in existing.items() if k != "total_request"},
+                "dev":"@ROXXOP"
+            }),200
         PaidRecords[oid]=res
         save_json(PAID_FILE,PaidRecords)
 
