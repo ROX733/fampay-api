@@ -291,7 +291,8 @@ def register_telegram_alerts(app):
                 order = _read(os.path.join(BASE_DIR, "orders.json")).get(order_id, {})
                 amount = order.get("amount", "—")
                 message = str(data.get("message", ""))
-                if data.get("status") == "success":
+                if data.get("status") == "success" and str(data.get("already_verified", "false")).lower() != "true":
+                    # Repeated /fam_verify calls are queries, not new payment events.
                     detail = data.get("data") or {}
                     _notify(api_key,
                         "✅ <b>Payment Verified Successfully</b>\n"
